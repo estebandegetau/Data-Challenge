@@ -1,0 +1,660 @@
+---
+title: "Econometría Aplicada I"
+subtitle: "Tarea 2"
+author: "Esteban Degetau"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+format: pdf
+header-includes:
+  - \usepackage{threeparttable}
+lang: es
+execute: 
+  cache: true
+  warning: false
+  message: false
+  echo: false
+bibliography: references.bib
+---
+
+```{r setup}
+#| include: false
+#| cache: false
+
+# Libraries
+pacman::p_load(rmarkdown,
+               tidyverse,
+               here,
+               ggplot2,
+               fixest,
+               gtsummary,
+               haven,
+               kableExtra,
+               stargazer,
+               sandwich,
+               car,
+               fastDummies)
+
+# Set working directory
+here::i_am("tareas/02/tarea_2.qmd")
+
+# Set ggplot default theme, colors, and font size
+theme_set(theme_minimal(base_size = 8, base_family = "Helvetica"))
+
+
+
+```
+
+## 1. Introducción
+
+(a) En la @tbl-summary se muestran estadísticas descriptivas básicas de todas las variables de la base de datos.
+
+```{r read_data}
+#| include: false
+
+# Lectura de datos
+usuarios_raw <- haven::read_dta(here("datos", "mexbank.dta"))
+
+usuarios_raw |> glimpse()
+
+# Turn yes/no variables into logical
+usuarios <- usuarios_raw |>
+    mutate(
+        across(c(default, housing, loan, termdeposit), ~ case_when(
+            .x == "yes" ~ TRUE,
+            .x == "no" ~ FALSE
+        )),
+
+        pdays = case_when(pdays > 0 ~ pdays),
+
+        call = !is.na(pdays),
+
+        porc_contact = campaign / (campaign + previous),
+
+        married = marital == "married",
+        single = marital == "single",
+        divorced = marital == "divorced"
+    ) |>
+    fastDummies::dummy_cols(
+        select_columns = c("job", "education", "contact", "poutcome"),
+        remove_selected_columns = F
+    ) |>
+    # Turn integer dummies into logical
+    mutate(across(
+        where(is.integer),
+        ~ case_when(
+            .x == 1 ~ TRUE,
+            .x == 0 ~ FALSE
+        )
+    )) |>
+    drop_na(age, default, housing, loan, campaign, duration, poutcome) 
+
+usuarios |> glimpse()
+
+```
+
+```{r summary}
+#| include: true
+#| label: tbl-summary
+#| tbl-cap: "Usuarios - estadísticas descriptivas"
+
+
+usuarios |> 
+    summarize(
+        across(
+            where(is.numeric) | where(is.logical),
+            list(
+                mean = ~mean(.x, na.rm = T),
+                 sd = ~sd(.x, na.rm = T), 
+                 min = ~min(.x, na.rm = T), 
+                 max = ~max(.x, na.rm = T), 
+                 type = typeof),
+            .names = "{.col}_{.fn}")
+        ) |>
+        # Resahape to long
+        pivot_longer(
+            cols = everything(),
+            names_to = c("variable", ".value"),
+            names_pattern = "(.+)_(.+)"
+        ) |>
+        # Format
+        select(
+            variable,
+            type,
+            mean,
+            sd,
+            min,
+            max
+        ) |>
+        # Rename variable types
+        mutate(
+            type = case_when(
+                type == "logical" ~ "Categórica",
+                type == "double" ~ "Continua"
+            )
+        ) |>
+        # Kable
+        kable(
+            format = "latex",
+            booktabs = T,
+            format.args = list(big.mark = ",", decimal.mark = "."),
+            col.names = c("Variable", "Tipo", "Media", "Des. est.", "Mínimo", "Máximo"),
+            digits = 1
+        ) |>
+        # Stripped rows
+        kable_styling(
+            latex_options = c("striped"),
+            full_width = F
+        ) |>
+        # Fix column width
+        column_spec(1, width = "1.5in")
+
+
+```
+
+(b) Como se puede ver en la @tbl-summary, redefiní la variable `pdays` para tomar valores positivos solo cuando se efectuó una llamada. Toma `NA` cuando no se ha efectuado. Adicionalmente, agregué la variable `call` que indica si ya se realizó una llamada (uso `call` en la @tbl-pdays).
+
+(c) La @fig-edad-balance muestra la correlación (no paramétrica) entre la edad de los usuarios y el balance de sus cuentas. Se observa una relación positiva entre ambas variables, lo que sugiere que los usuarios más viejos tienden a tener más dinero en sus cuentas. Es intuitivo pernsarlo, porque los usuarios mas viejos han tenido más tiempo para ahorrar.
+
+```{r}
+#| label: fig-edad-balance
+#| fig-cap: "Balance promedio por edad"
+#| include: true
+
+usuarios |>
+    ggplot(aes(x = age, y = balance)) +
+   # geom_point(alpha = 0.5) +
+    geom_smooth(
+        #method = "lm",
+        se = F
+    ) +
+    labs(
+        x = "Edad",
+        y = "Balance (MXN)",
+        # title = "Edad vs. Balance"
+    ) +
+    theme_minimal()  +
+    # Add commas to balance
+    scale_y_continuous(
+        labels = ~ scales::comma(.x)
+       # breaks = c(-10000, -1000, -100, -10, 0, 10, 100, 1000, 10000)
+    )
+
+```
+
+## 2. Préstamos hipotecarios
+
+(a) La @fig-balance-housing muestra el balance por estatus de contratción de préstamo hipotecario. Adicionalmente, agregué un diagrama de caja y brazo para visualizar más fácilmente la diferencia de balances entre grupos.
+
+```{r}
+#| label: fig-balance-housing
+#| layout-nrow: 2
+#| fig-cap: "Balance por otorgamiento de préstamo hipotecario"
+#| fig-subcap: 
+#|  - "Histograma"
+#|  - "Boxplot"
+
+
+usuarios |>
+    mutate(
+        housing = case_when(
+            housing == TRUE ~ "Con préstamo hipotecario",
+            housing == FALSE ~ "Sin préstamo hipotecario"
+        )
+    ) |>
+    ggplot(aes(x = asinh(balance), fill = housing)) +
+    geom_histogram() +
+    facet_wrap(~housing) +
+    labs(
+        x = "Balance (MXN, escala arco seno hiperbólica)",
+        y = "Usuarios",
+    ) +
+    theme(
+        legend.position = "none"
+    ) +
+    scale_x_continuous(
+        labels = ~ scales::comma(sinh(.x)),
+        breaks = asinh(c(-1000, -100, -10, 0, 10, 100, 1000))
+    ) +
+    scale_y_continuous(
+        labels = scales::comma
+    )
+
+usuarios |>
+    mutate(
+        housing = case_when(
+            housing == TRUE ~ "Con préstamo hipotecario",
+            housing == FALSE ~ "Sin préstamo hipotecario"
+        )
+    ) |>
+    ggplot(aes(x = (housing), y = asinh(balance))) +
+    geom_boxplot() +
+    scale_y_continuous(
+        labels = ~ scales::comma(sinh(.x)),
+        breaks = asinh(c(-10000, -1000, -100, -10, 0, 10, 100, 1000, 10000))
+    ) +
+    labs(
+        y = "Balance (MXN, escala arco seno hiperbólica)",
+        x = ""
+)
+
+```
+
+(b) La @tbl-balance-housing-lm muestra la relación lineal entre balance anual promedio y contratación de préstamo hipotecario. Encuentra que los usuarios con préstamos hipotecarios tienen un balance anual promedio 421 MXN menor que los usuarios sin préstamo hipotecario. El efecto es estadísticamente significativo al 1%. En las figuras del inciso anterior se puede confirmar que los usuarios con préstamo hipotecario tienden a tener balances más bajos que los usuarios sin ellos, a pesar de que la diferencia no es visiblemente ni económicamente muy grande.
+
+```{r}
+#| label: tbl-balance-housing-lm
+#| tbl-cap: "Balance anual promedio por otorgamiento de préstamo hipotecario"
+#| results: "asis"
+
+usuarios |>
+    feols(balance ~ housing, vcov = "HC1") |>
+    etable(
+        tex = T,
+        dict = c(
+            housingTRUE = "housing"
+        ),
+        fitstat = ~ n + f + my 
+    )
+
+
+
+
+```
+
+(c) Los histogramas de la @fig-balance-housing muestran que la varianza del balance es distinta para cada estado de la contratación de préstamo hipotecario. En particular, las personas sin préstamo hipotecario tienen una concentración importante de balance al rededor de los 1,000 MXN, mientras que el balance de las usuarias sin préstamo hipotecario presenta mayor dispersión. Por lo tanto, el supuesto de homocedasticidad no se cumple y la estimación de la @tbl-balance-housing-lm usa errores estándar robustos.
+
+(d) Puesto que la variable independiente en la estimación de la @tbl-balance-housing-lm es binaria, el ejercicio representa una prueba de hipótesis de la diferencia de medias del balance promedio anual de la cuenta en cada caso de contratación de un préstamo hipotecario. En particular, el coeficiente estimado de -421.1 representa la diferencia de medias entre los usuarios con y sin préstamo hipotecario. Su error estándar (robusto) entre paréntesis 29.93 representa el denominador del estadístico $t$ de dicha prueba de hipótesis. El estadístico $t$ es igual a -14.07, y su valor $p$ es menor a 0.01. Por lo tanto, se rechaza la hipótesis nula de que la diferencia de medias es cero. En otras palabras, se rechaza la hipótesis nula de que el balance promedio anual de los usuarios con y sin préstamo hipotecario es el mismo.
+
+## 3. Análisis
+
+(a) La @tbl-summary muestra que la usuaria promedio recibió 90% de sus llamadas durante la campaña, y solo 10% antes de la campaña.
+
+(b) La @tbl-mco muestra las estimaciones por MCO con observaciones homogéneas y errores robustos.
+
+```{r}
+#| label: tbl-mco
+#| tbl-cap: "Estimaciones de MCO"
+#| results: "asis"
+
+r1 <- usuarios |>
+    filter(default) |>
+    feols(
+        balance ~ age + housing + loan + campaign + duration + poutcome)
+
+r2 <- usuarios |>
+    filter(!default) |>
+    feols(
+        balance ~ age + housing + loan + campaign + asinh(duration) + poutcome)
+
+r3 <- usuarios |>
+    feols(balance ~ age + housing + loan + campaign + duration + poutcome)
+
+r4 <- usuarios |>
+    feols(asinh(balance) ~ age + default + housing + loan + asinh(duration))
+
+r5 <- usuarios |>
+    feols(porc_contact ~ age + default  + duration + poutcome)
+
+etable(r1, r2, r3, r4, r5, 
+       fitstat = ~ n + ar2 + f, 
+       digits = 3,
+       digits.stats = 3,
+       tex = T,
+       vcov = "HC1",
+       order = c("age", "default", "housing", "loan", "campaign", "duration", "asinh(duration)", "poutcome", "Constant"),
+       depvar = F,
+       headers = list(":_:Dep var:" = list("balance" = 3, "asinh(balance)" = 1, "porc_contact" = 1)),
+       extralines = list("_Muestra:" = list("default" = 1, "no default" = 1, "completa" = 3)),
+       dict = c(
+        "defaultTRUE" = "default",
+        "housingTRUE" = "housing",
+        "loanTRUE" = "loan",
+        "poutcomeother" = "poutcome: other",
+        "poutcomeunknown" = "poutcome: unknown",
+        "poutcomesuccess" = "poutcome: success"
+       ))
+
+```
+
+(c) Notar que en la @tbl-mco, porque las variables `balance` y `duration` tienen valores no positivos, usé la transformación de arco seno hiperbólico en lugar de la transformación logarítmica para tener un número de observaciones homogéneo y poder comparar a través de las columnas.[^1]
+
+(d) Interpretación (más específica posible) de los coeficientes en la @tbl-balance-housing-lm.
+
+    -   $\beta_0$ en la especificación (1) se refiere al balance promedio de las categorías omitidas de las variables categóricas cuando las variables continuas son cero, dado que la usuaria incumple (default). En este caso, se refiere al balance promedio de las usuarias sin préstamo hipotecario, sin préstamo personal, cuyo resultado de la campaña anterior fue fracaso, con edad 0, que recibieron 0 llamadas durante la campaña, y cuya última llamada duró 0 segundos. En específico, una usuaria con estas características tendría un balance de -143.1 MXN.
+    -   `age` en la especificación (1) se refiere al cambio en el balance promedio anual por cada año de edad adicional de la usuaria, cuando las demás variables son constantes, dado que la usuaria hizo default. En específico, un año de edad adicional está asociado con un cambio de 4.6 MXN en el balance promedio anual, todo lo demás constante.
+    -   `housing` en la especificación (2) se refiere al cambio en el balance promedio anual asociado con la contrtación de un préstamo hipotecario, cuando las demás variables son constantes, dado que la usuaria no hizo default. En específico, tener un préstamo hipotecario está asociado con un cambio de -312.3 MXN en el balance promedio anual, todo lo demás constante.
+    -   asinh(`duration`) en la especificación (2) se refiere al cambio en el balance promedio anual asociado a un cambio de 1% de la duración de la última llamada, cuando las demás variables son constantes, dado que la usuaria no hizo default. En específico, el aumento de 1% de la duración de la última llamada está asociado con un cambio de 55.51 MXN en el balance promedio anual, todo lo demás constante.
+    -   `poutcome` es una variable categórica con 4 categorías `success`, `failure`, `other` y `unknown`. En la especificación (3), se refiere al cambio en el balance promedio anual asociado con cada una de las categorías de la variable, cuando las demás son constantes, respecto de haber tenido un resultado de campaña anterior fallido (puesto que esa es la categíra omitida en la especificación).
+        -   En específico, haber tenido un resultado en la campaña anterior de *éxito* (`success`) está asociado con un aumento de 210.5 MXN en el balance promedio anual, todo lo demás constante, respecto de haber tenido un resultado fallido.
+        -   Haber tenido un resultado de la campaña anterior *desconocido* (`unknown`) está asociado con un decremento en la cuenta de 190.6 MXN, respecto de haber tenido un resultado fallido.
+        -   Finalmente, haber tenido un resultado de la campaña anterior *otro* (`other`) está asociado con un incremento de la cuenta de 23.1 MXN, respecto de haber tenido un resultado fallido.
+    -   `campaign` en la especificación (3) se refiere al cambio en el balance promedio anual asociado con un incremento de una llamada durante la campaña, cuando las demás variables son constantes. En específico, un incremento de una llamada durante la campaña está asociado con un decremento de 10.18 MXN en el balance promedio anual, todo lo demás constante.
+    -   `age` en la especificación (4) se refiere a al cambio porcentual promedio en el balance de la cuenta asociado con un año de edad adicional, cuando las demás variables son constantes. En específico, un año de edad adicional está asociado con un incremento de 1.9% en el balance promedio anual, todo lo demás constante.
+    -   `loan` en la especificación (4) se refiere al cambio porcentual promedio en el balance de la cuenta asociado con la contratación de un préstamo personal. En específico, contratar un préstamo personal está asociado con un decremento de 140% en el balance promedio anual, todo lo demás constante.
+    -   asinh(`duration`) en la especificación (4) se refiere al cambio porcentual en el balance de la cuenta asociado a un incremento de 1% en la duración de la última llamada, cuando las demás variables son constantes. En específico, un incremento de 1% en la duración de la última llamada está asociado con un incremento de 11.7% en el balance promedio anual, todo lo demás constante.
+    -   `default` en la especificación (5) se refiere al cambio promedio del porcentaje de llamadas efectuadas durante campaña asociado con el incumplimiento de pago, cuando las demás variables son constantes. En específico, el incumplimiento de pago está asociado con un decremento de 0.1 punto porcentual de llamadas durante la campaña, todo lo demás constante.
+    -   `duration` en la especificación (5) se refiere al cambio promedio del porcentaje de llamadas efectuadas durante campaña asociado con el incremento de 1 segundo en la duración de la última llamada, cuando las demás variables son constantes. En específico, un incremento de 1 segundo en la duración de la última llamada está asociado con un decremento de `r (4.23*10^(-6)) |> round(6)` puntos porcentuales de llamadas durante la campaña, todo lo demás constante.
+
+(e) Sesgo por variable omitida. Nos preocupa que la exclusión de `housing` en la estimación de asinh(`balance`) en la especificación (4) de la @tbl-mco pueda sesgar el coeficiente para `age`. Sea el modelo completo
+    \begin{align}
+    \label{eq-modelo-completo}
+    \text{asinh}(balance) = \beta_0 + \beta_1 age + \beta_2 default + \beta _3 loan  + \beta_4 \text{asinh}(duration) + \beta_5 housing + u
+    \end{align} Y sea el modelo corto \begin{align}
+    \label{eq-modelo-corto}
+    \text{asinh}(balance) = \alpha_0 + \alpha_1 age + \alpha_2 default + \alpha_3 loan  + \alpha_4 \text{asinh}(duration) + v
+    \end{align} ¿Qué relación guarda $\alpha_1$ respecto de $\beta_1$? Sea la regresión auxiliar \begin{align}
+    \label{eq-reg-aux}
+    housing = \gamma_0 + \gamma_1 age + \gamma_2 default + \gamma_3 loan  + \gamma_4 \text{asinh}(duration) + w
+    \end{align} Al sustituir el modelo residual \ref{eq-reg-aux} en el modelo corto \ref{eq-modelo-corto} y reordenar, se obtiene el sesgo por variable omitida de `housing` en la estimación de asinh(`balance`) en la especificación \ref{eq-modelo-corto}: \begin{align}
+    \label{eq-sesgo}
+    \alpha_1 - \beta_1 = \beta_5 \gamma_1
+    \end{align} Es decir, el sentido del sesgo depende de los signos de $\beta_5$ y $\gamma_1$. Si $\beta_5$ y $\gamma_1$ tienen el mismo signo, entonces $\alpha_1 - \beta_1$ es positivo, y la estimación de $\beta_1$ en la especificación \ref{eq-modelo-corto} está sesgada hacia arriba. Si $\beta_5$ y $\gamma_1$ tienen signos opuestos, entonces $\alpha_1 - \beta_1$ es negativo, y la estimación de $\beta_1$ en la especificación \ref{eq-modelo-corto} está sesgada hacia abajo. En la @tbl-sesgo-housing se muestra que $\alpha_1 - \beta_1$ = `r (0.024 - 0.019) |> round(3)`, y que $\beta_5 \gamma_1$ = `r (-0.593 * -0.009) |> round(3)`. Por lo tanto, no incluir la variable `housing` en la especificación (4) de la @tbl-mco sesgaría la estimación de `age` hacia arriba en una magnitud de 0.005. La ecuación \ref{eq: sesgo-hat} presenta la estimación de los coeficientes de la regresión auxiliar descrita en la ecuación \ref{eq-reg-aux}.
+```{r}
+#| results: "asis"
+
+pacman::p_load(equatiomatic)
+
+# estimate auxiliary regression in lm
+lm_aux <- lm(housing ~ age + default + loan + asinh(duration), data = usuarios)
+
+eq <- equatiomatic::extract_eq(
+    label = "sesgo-hat",
+    lm_aux, 
+    use_coefs = T, 
+    raw_tex = F,
+   #  align_env = "align", 
+     coef_digits = 3,
+     wrap = T,
+     swap_var_names = c(
+        "defaultTRUE" = "default",
+        "housingTRUE" = "housing",
+        "loanTRUE" = "loan")
+        )
+
+print(eq)
+```
+
+```{r}
+#| label: tbl-sesgo-housing
+#| tbl-cap: "Sesgo por variable omitida de `housing`"
+#| results: "asis"
+
+# Short
+r6 <- usuarios |>
+    feols(
+        asinh(balance) ~ age + default + loan + asinh(duration))
+
+# Auxiliar
+r7 <- usuarios |>
+    feols(
+        housing ~ age + default + loan + asinh(duration))
+
+# Coef table
+etable(
+    r4, r6, r7,
+    fitstat = ~ n + ar2 + my,
+    digits = 3,
+    digits.stats = 3,
+    tex = T,
+    vcov = "HC1",
+    order = c("age", "default", "loan", "duration", "housing", "!Constant"),
+    dict = c(
+        "defaultTRUE" = "default",
+        "housingTRUE" = "housing",
+        "loanTRUE" = "loan",
+        "poutcomeother" = "poutcome: other",
+        "poutcomeunknown" = "poutcome: unknown",
+        "poutcomesuccess" = "poutcome: success"
+       ),
+    depvar = F,
+    headers = list(
+        ":_:Variable dependiente:" = list("asinh(balance)" = 2, "housing" = 1),
+        "Especificación:" = list("Larga" = 1, "Corta" = 1, "Auxiliar" = 1)
+    )
+
+)
+```
+
+
+
+(f) La columna más adecuada depende de la pregunta de interés del cliente. Si al cliente le interesa una descripción del comportamiento del balance de las cuentas, la columna más adecuada es la (4) que describe los cambios porcentuales del balance de la cuenta ante cambios de edad, morosidad, contratación de préstamos personales e hipotecarios, y cambio porcentual de la duración de la llamada. Esta especificación de balance es la que mejor se ajusta a los datos, y la que tiene un estadístico $F$ mayor. Señala que un aumento de un año de edad está asociado con un incremento de 1.9% en el balance de la cuenta, todo lo demás constante. A pesar de que este aumento es estadísticamente significativo, económicamente no es muy grande, puesto que el objetivo de inflación anual es de $3\pm1$%. Es decir, a esa velocidad de ahorro, las usuarias están pediendo recursos en términos reales.
+
+     Sin embargo, si lo que le interesa al cliente es el porcentaje de llamadas recibidas durante la campaña, la columna más adecuada es la (5) que describe el cambio en el porcentaje de llamadas recibidas durante la campaña ante cambios en la edad, morosidad, duración de la última llamada, y resultado de la campaña anterior. Este modelo no encuentra evidencia de que las personas de mayor edad reciban más o menos llamadas durante la campaña.
+
+## 4. Extensión del análisis
+
+(a) La @tbl-poly-duration muestra transformaciones polinomiales de la variable `duration` en la especificación (3) de la @tbl-mco. Encuentra que las transformaciones de segundo y tercer grado no brindan un mejor ajuste que el modelo de primer orden. Los coeficientes de las variables de segundo y tercer grado no son estadísticamente significativos, y la adición de éstas no brinda un mejor ajuste a los datos. Por lo tanto, la mejor especificación es la incluida en la columna (3) de la @tbl-mco, sin coeficientes polinomiales adicionales para `duration`.
+
+    El término cuadrático de la especificación (2) en la @tbl-poly-duration se interpreta como el cambio marginal en el balance de la cuenta asociado con un incremento de un segundo de la duración de la última llamada cuando la duración es cero, dejando las demás variables constantes. Es decir es el cambio marginal asiciado con incrementar en un segundo la duración de la llamada, partiendo de cero segundos, todo lo demás constante.
+
+    El término cúbico en la esecificación (3) en la @tbl-poly-duration se interpreta como la curvatura del efecto marginal de incrementar la duración en un segundo partiendo desde cero segundos. Es decir, nos dice si el efecto marginal (del primer segundo) es cóncavo o convexo según su signo.
+
+    Como las transformaciones polinomiales de `duration` no son distinguibles del cero, podemos interpretar este resultado como que la duración de la última llamada tiene rendimientos marginales constantes en el balance.
+
+```{r}
+#| results: "asis"
+#| label: tbl-poly-duration
+#| tbl-cap: "Estimaciones de MCO con transformación polinomial de duration"
+
+
+# 2nd degree polynomial
+r8 <- usuarios |>
+    
+    feols(
+        balance ~ age + housing + loan + campaign + duration + duration^2 + poutcome)
+
+# 3rd degree polynomial
+r9 <- usuarios |>
+    feols(
+        balance ~ age + housing + loan + campaign + duration + duration^2 + duration^3 + poutcome)
+
+
+
+
+
+# Estimation table
+etable(
+    r3, r8, r9,
+    fitstat = ~ n + ar2 + f,
+    digits = 3,
+    digits.stats = 3,
+    tex = T,
+    vcov = "HC1",
+    # Drop all vars except duration
+    drop = c("housing", "loan", "campaign", "poutcome", "age"),
+    order = as.character(c(seq(1, 3), "!Constant")),
+    dict = c(
+        #"poly\\(duration\\)\\1" = "duration",
+        "defaultTRUE" = "default",
+        "housingTRUE" = "housing",
+        "loanTRUE" = "loan",
+        "marriedTRUE" = "married",
+        "divorcedTRUE" = "divorced",
+        "poutcomeother" = "poutcome: other",
+        "poutcomeunknown" = "poutcome: unknown",
+        "poutcomesuccess" = "poutcome: success"
+       ),
+    # depvar = F,
+    # headers = list(":_:Dep. Vars:" = c("balance" = 3, "porc_contact" = 2)),
+    group = list("Controls" = c("housing", "loan", "campaign", "poutcome", "age")),
+    notes = c("**Nota**: Los controles insluidos son housing, loan, campaign, poutcome y age."),
+   # placement = "H!",
+   tpt = T,
+   float = T
+#    title = "MCO con transformación polinomial de duration",
+#    label = "tbl-poly-duration"
+)
+
+
+```
+
+```{r}
+#| label: fig-duration-smooth
+#| fig-cap: "Balance promedio por duración de la última llamada"
+#| eval: false
+
+
+usuarios |>
+    ggplot(aes(x = duration, y = balance)) +
+    geom_smooth(
+        se = F,
+        aes(color = "No paramétrico")
+    ) +
+    geom_smooth(
+        method = "lm",
+        aes(color = "1er grado"),
+        se = F
+    ) +
+    # Second order polynomial
+    geom_smooth(
+        method = "lm",
+        formula = y ~ poly(x, 2, raw = T),
+        se = F,
+        aes(color = "2do grado")
+    ) +
+    # Third order polynomial
+    geom_smooth(
+        method = "lm",
+        formula = y ~ poly(x, 3, raw = T),
+        se = F,
+        aes(color = "3er grado")
+    ) +
+    labs(
+        x = "Duración de la última llamada",
+        y = "Balance",
+        # title = "Edad vs. Balance"
+    ) +
+    theme_minimal() 
+
+```
+
+(b) La columna (1) de la @tbl-pdays muestra la relación de las variables `default` y `married` con `porc_contact` con la siguiente interacción: \begin{align}
+    \label{eq-int}
+    porc\_contact_i = \beta_0 + \beta_1 married_i + \beta_2 default_i + \beta_3 married_ \times default_i + U_i
+    \end{align} 
+    En particular, $\beta_1$ indica que las usuarias casadas y no mororsas reciben 1.2 puntos porcentuales más llamadas durante la campaña, respecto de las usuarias no casadas y no morosas. La estimación para $\beta_3$ indica que las usuarias casadas y morosas recibieron 1.5 puntos porcentuales más llamadas durante la campaña, respecto de las usuarias solo casadas o solo morosas.
+
+(c) Para ver la relación de la interacción de la morosidad con otros estados civiles (soltero, divorciado[^2]) propongo la siguiente especificación: \begin{align}
+    \label{eq-int-div}
+    porc\_contact_i =& \beta_0 + \beta_1 married_i + \beta_2 divorced_i +\nonumber \\
+             & default_i \times (\beta_3 + \beta_4 married_i  + \beta_5 divorced_i ) + U_i
+    \end{align} En donde $\beta_0$ representa el promedio de llamadas durante la campaña para las usuarias solteras no morosas y $\beta_0 + \beta_3$ para las solteras morosas. Entonces, los demás coeficientes miden cambios respecto de las usuarias solteras. En particular, en la columna (2) de la @tbl-pdays vemos que las usuarias casadas tuvieron (no morosas) 1.5 puntos porcentuales más llamadas durante la campaña que las solteras (no morosas).
+
+(d) A partir de `pdays`, definí `call` como una dummy que indica si la usuaria ha recibido al menos una llamada durante la campaña. Como se puede ver en la @tbl-summary, solo 20% de la muestra ha recibido una llamada.
+
+    Sugiero la siguiente especificación para incluir `pdays`en la especificación (\ref{eq-int-div}): 
+    \begin{align}
+    porc\_contact_i =& \beta_0 + \beta_1 married_i + \beta_2 divorced_i +\nonumber \\
+             & default_i \times (\beta_3 + \beta_4 married_i  + \beta_5 divorced_i ) + \nonumber \\
+             & \beta_6 call_i + \beta_7 pdays_i\times call_i + U_i
+    \end{align}
+    
+    ¡A través de la indicadora `call`, podemos incluir `pdays` incluso para las observaciones que aún no reciben una llamada! Entonces, $\beta_6$ captura el efecto de las usuarias que aún no reciben llamada, mientras que $\beta_7$ mide la correlación entre los días transcurridos desde la última llamada y el porcentaje de llamadas recibidas durante campaña, todo lo demás constante. 
+
+    La columna (3) de la @tbl-pdays muestra el coeficiente estimado de $\beta_6$ que indica que las usuarias que han recibido al menos una llamada durante la campaña recibieron 0.4 puntos porcentuales *menos* llamadas durante la campaña que las usuarias que aún no reciben llamada, *cuando no ha pasado un día desde la llamada*. Posteriormente, el coeficiente estimado de $\beta_7$ indica que por cada día que pasa desde la última llamada, el porcentaje de llamadas recibidas durante la campaña aumenta `r (5.44*10^(-6)) |> round(6)` puntos porcentuales, todo lo demás constante.
+
+```{r}
+#| label: tbl-pdays
+#| tbl-cap: "Determinantes de llamadas durante la campaña"
+#| results: 'asis'
+
+r10 <- usuarios |>
+    feols(
+        porc_contact ~ married * default
+    )
+
+r11 <- usuarios |>
+    feols(
+        porc_contact ~ default * (married + divorced)
+    )
+
+r12 <- usuarios |>
+    mutate(pdays = case_when(
+        is.na(pdays) ~ -1,
+        TRUE ~ pdays),
+        call = as.integer(pdays)) |>
+    feols(porc_contact ~ default * (married + divorced) + call + call:pdays)
+
+r13 <- usuarios |>
+    feols(porc_contact ~ balance * married)
+
+
+etable(
+    r10,
+    r11,
+    r12,
+    r13,
+    fitstat = ~ n + ar2 + my + f,
+    digits = 3,
+    digits.stats = 3,
+    tex = T,
+    vcov = "HC1",
+    # Drop all vars except duration
+    dict = c(
+        "defaultTRUE" = "default",
+        "housingTRUE" = "housing",
+        "loanTRUE" = "loan",
+        "marriedTRUE" = "married",
+        "divorcedTRUE" = "divorced",
+        "callTRUE" = "call",
+        "callFALSE" = "no call",
+        "poutcomeother" = "poutcome: other",
+        "poutcomeunknown" = "poutcome: unknown",
+        "poutcomesuccess" = "poutcome: success"
+    ),
+    order = c(
+        # "pdays",
+        # "call",
+        # "married",
+        # "divorced",
+        "!Constant"
+        # "!default"
+        # "!divorced",
+        # "!married",
+        # "!call"
+    )
+    # depvar = F,
+    # headers = list(":_:Dep. Vars:" = c("balance" = 3, "porc_contact" = 2)),
+)
+
+```
+
+(e) La columna (4) de la @tbl-pdays muestra la relación de `married` y `balance` con `porc_contact` con la siguiente interacción: \begin{align}
+    \label{eq-int-balance}
+    porc\_contact_i = \beta_0 + \beta_1 married_i + \beta_2 balance_i + \beta_3 married_i \times balance_i + U_i
+    \end{align} En donde el coeficiente $\beta_3$ indica el cambio en `porc_contac` asociado a un incremento de un peso en `balance` cuando la usuaria es casada. En particular, encontramos que este coeficiente no es estadísticamente significativo, lo que indica que las usuarias casadas no tienen una correlación entre su balance y el porcentaje de llamadas durante la campaña distinta de las no casadas.
+
+(f) ¿`balance` tiene una influencia significativa en `porc_contact` en la especificación (\ref{eq-int-balance})? Para responder esta pregunta, propongo la siguiente prueba de hipótesis: \begin{align*}
+    H_0: \begin{cases} 
+    \beta_2 = 0 \\
+    \beta_3 = 0
+    \end{cases} \qquad H_1: e.o.c.
+    \end{align*} La @tbl-hyp muestra que en la especificación (\ref{eq-int-balance}) podemos rechazar la hipótesis nula de que `balance` no tiene una influencia significativa en `porc_contact`.
+
+```{r}
+#| label: tbl-hyp
+#| tbl-cap: "Prueba de hipótesis"
+#| results: "asis"
+
+mat <- rbind(
+    c(0, 0, 1, 0),
+    c(0, 0, 0, 1)
+)
+
+# Perform the hypothesis test and save the results
+test_results <- linearHypothesis(r13, mat, white.adjust = "hc1")
+
+# Convert the test results to a data frame
+df <- as.data.frame(test_results) |>
+    slice(-1)
+
+# Print the results table using kable
+kable(df, format = "latex", booktabs = TRUE, digits = 3) |>
+  kable_styling(latex_options = c("striped", "hold_position"))
+
+```
+
+[^1]: A pesar de las dificultades que @bellemare2020 señalan respecto de la transformación arco seno hiperbólica, la aproximación parece suficientemente buena para efectos de esta tarea.
+
+[^2]: **Nota**: En los datos recabados por *MexBank*, la categoría `divoricado` dentro de la variable `marital` incluye tanto a divorciados como a viudos, por lo que no se puede separar el efecto para estos grupos.
+
+## Referencias

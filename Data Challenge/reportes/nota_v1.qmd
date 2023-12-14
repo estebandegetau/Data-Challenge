@@ -1,0 +1,549 @@
+---
+title: "Data Challenge: Monster Hunt en el ITAM"
+subtitle: "Econometría Aplicada I"
+author: 
+    - "Andres Bermudez^[Contribuciones: Implementación independiente de entrenamiento por redes neuronales y Bayesian GLM.]"
+    - "Esteban Degetau^[Contribuciones: Replicación de @thomas2016; entrenamiento no supervisado; entrenamiento supervisado por Random Forest y GLM.]"
+    - "Andrea Rancaño^[Contribuciones: Replicación de @pérezherrero2017; entrenamiento supervisado por KNN siguiendo a @irizarry2019; creación de Wenceslao.]"
+format: pdf
+bibliography: references.bib
+link-citations: true
+execute:
+  echo: false
+  warning: false
+  message: false
+lang: es
+date: "8 noviembre 2023"
+---
+
+Para resolver la tarea de clasificación de los *monstruos* que invadieron el ITAM, implementamos una serie de ejercicios de clasificación supervisados y no supervisados y seleccionamos el de mayor precisión y menor varianza. Este enfoque lo basamos en los ejercicios de clasificación de @thomas2016. También buscamos replicar el ejercicio de @pérezherrero2017, pero su procedimiento nos resultó poco claro. Adicionalmente, consultamos el libro de @irizarry2019 para guiar el entrenamiento supervisado.
+
+Esta nota está organizada de la siguiente manera. Primero presentamos un breve análisis exploratorio de los datos. Después, presentamos los ejercicios de entrenamiento no supervisado y supervisado. Finalmente, presentamos el procedimiento de creación de nuestro monstruo, Wenceslao.
+
+## Datos
+
+En este apartado, seguimos el análisis de @thomas2016 para darnos una idea de la distribución de los datos. La @fig-boxplot muestra que los monstruos que acechan al ITAM son muy similares a los que se estudiaron en @thomas2016. Resalta que, cada una de las características de los monstruos no permite al lector categorizar por tipo a simple vista. Es decir, no hay una característica que *por sí misma* distinga a los monstruos de cada tipo.
+
+La @fig-colors muestra que la distribución de colores por tipo de monstruo es bastante homogénea, por lo que no se puede clasificar con base en ella por sí misma.
+
+```{r setup}
+#| include: false
+
+rm(list = ls())
+gc()
+
+pacman::p_load(
+    tidyverse,
+    here,
+    FactoMineR,
+    factoextra,
+    fpc,
+    caret,
+    glmnet,
+    ranger,
+    e1071,
+    clValid,
+    mlr,
+    kableExtra
+)
+
+here::i_am("reportes/nota_v1.qmd")
+
+theme_set(theme_minimal())
+```
+
+```{r read}
+#| include: false
+
+training <- read_csv(here("datos", "train_set.csv")) 
+```
+
+```{r wrangle}
+#| include: false
+
+work <- training |>
+    select(-color) |>
+    as.data.frame()
+
+work_color <- training |>
+    fastDummies::dummy_cols("color", remove_selected_columns = T) |>
+    as.data.frame()
+
+# Add every interaction term between numeric variables
+work_int <- training |>
+    select(-color) |>
+    mutate(
+        bone_length_rotting_flesh = bone_length * rotting_flesh,
+        bone_length_hair_length = bone_length * hair_length,
+        bone_length_has_soul = bone_length * has_soul,
+        rotting_flesh_hair_length = rotting_flesh * hair_length,
+        rotting_flesh_has_soul = rotting_flesh * has_soul,
+        hair_length_has_soul = hair_length * has_soul
+    )
+
+full <- training |>
+    fastDummies::dummy_cols("color", remove_selected_columns = T) |>
+    mutate(
+        bone_length_rotting_flesh = bone_length * rotting_flesh,
+        bone_length_hair_length = bone_length * hair_length,
+        bone_length_has_soul = bone_length * has_soul,
+        rotting_flesh_hair_length = rotting_flesh * hair_length,
+        rotting_flesh_has_soul = rotting_flesh * has_soul,
+        hair_length_has_soul = hair_length * has_soul
+    )
+
+```
+
+```{r}
+#| label: fig-boxplot
+#| fig-cap: "Diagramas de caja y brazo por tipo de monstruo"
+#| layout-ncol: 2
+#| fig-subcap: 
+#|   - "Bone Length"
+#|   - "Percentage of Rotting Flesh"
+#|   - "Hair length"
+#|   - "Percentage of Soul Present"
+#| #| fig-width: 5
+#| fig-height: 5
+
+# Boxplot by type function
+boxplot_by_type <- function(data, variable, title) {
+    ggplot(data, 
+           aes(x = type, 
+               y = {{ variable }}, 
+               fill = type)) + 
+      geom_boxplot() +
+      guides(fill = FALSE) + 
+      xlab("") + 
+      ylab(title) +
+      scale_fill_manual(values = c("#D55E00", "#0072B2", "#009E73")) +
+      scale_y_continuous(limits = c(0, 1))
+}
+
+training |>
+    boxplot_by_type(bone_length, "Bone Length") 
+
+training |>
+    boxplot_by_type(rotting_flesh, "Percentage of Rotting Flesh")
+
+training |>
+    boxplot_by_type(hair_length, "Hair Length")
+
+training |>
+    boxplot_by_type(has_soul, "Percentage of Soul Present")
+
+```
+
+```{r}
+#| label: fig-colors
+#| fig-cap: "Distribución de colores por tipo de monstruo"
+#| fig-width: 8
+#| fig-height: 3
+
+training |>
+    ggplot(aes(x = color, fill = color)) +
+    geom_bar() +
+    facet_wrap(~type) +
+    labs(
+        x = "",
+        y = "Monstruos") +
+    scale_fill_manual(values = c("Black", "#D55E00", "#0072B2", "#F0E442", "#009E73", "#999999")) +
+    theme(legend.position = "none") +
+    coord_flip() 
+ 
+```
+
+### Componentes principales
+
+En esta sección expandimos el análisis de componentes de @thomas2016 para indagar en la segmentación de los datos. En particular, buscamos encontrar qué combinación de variables permite segmentar de manera más eficiente a los monstruos. Consideramos cuatro combinaciones de variables:
+
+a. Solo variables numéricas
+a. Numéricas y dummies de color
+a. Numéricas con interacciones
+a. Todas las variables
+
+La @fig-pca muestra la segmentación de los monstruos a lo largo de dos componentes principales, para cada uno de las combinaciones de variables consideradas. Encontramos que, al menos usando dos componentes principales, no se puede segmentar claramente a los monstruos bajo ninguna combinación de variables.
+
+```{r}
+#| label: fig-pca
+#| fig-cap: "Análisis de componentes principales"
+#| layout-ncol: 2
+#| fig-subcap: 
+#|  - "Solo variables numéricas"
+#|  - "Numéricas y dummies de color"
+#|  - "Numéricas con interacciones"
+#|  - "Todas las variables"
+#| fig-width: 5
+#| fig-height: 4
+
+# # Compute principal components.
+# pc.out <- FactoMineR::PCA(work |> select(-type), scale.unit = F, graph = F)
+# 
+# # Visualize biplot with variable vectors on first two components
+# pc_biplot <- factoextra::fviz_pca_biplot(pc.out,
+#                              geom.ind = "point",
+#                              repel = T) +
+#   theme_classic()
+
+
+my_cluster_plot <- function(data) {
+
+cluster <- data |>
+  pull(type)
+
+data <- data |>
+  select(-type) 
+  
+    fviz_cluster(object = list(data = data, 
+                               cluster = cluster),
+             geom = "point",
+             ellipse = F,
+             ellipse.type = "euclid", # Concentration ellipse 
+             star.plot = F,
+             # Add segments from centroids to items
+             repel = TRUE, # Avoid label overplotting (slow),
+             main = "",
+             shape = "circle",
+             ggtheme = theme_minimal()) +
+  scale_color_manual(values = c("#D55E00", "#0072B2", "#009E73")) +
+  labs(color = "")
+
+}
+
+my_cluster_plot(work)
+
+my_cluster_plot(work_color)
+
+my_cluster_plot(work_int)
+
+my_cluster_plot(full)
+
+```
+
+## Entrenamiento no supervisado
+
+Esta sección busca expandir el entrenamiento no supervisado en @thomas2016. Ampliamos el análisis al considerar las cuatro combinaciones de variables en la sección anterior y 3 modelos no supervisados; *Hierarchical*, *K-means* y *PAM*. A cada uno de los modelos se le asignó la tarea de encontrar 3 categorías en los datos *sin incluir la categoría real*. El objetivo de este ejercicio es contar con un *benchmark* de precisión y varianza para la selección del mejor modelo de predicción.
+
+El primer paso de todo entrenamiento no supervisado es determinar si los datos muestran agrupamiento. La @tbl-hopkins muestra resultados de la prueba de Hopkins cercanos a 1, que es consistente con datos altamente segmentados.
+
+```{r}
+#| label: tbl-hopkins
+#| tbl-cap: "Prueba de Hopkins"
+
+
+here("resultados", "hopkins.RData") |> load()
+
+hopkins |>
+    mutate(
+        data_id = case_when(
+            data_id == "numeric" ~ "Numeric",
+            data_id == "color dummies" ~ "Numeric + Color",
+            data_id == "interactions" ~ "Numeric + Interactions",
+            data_id == "color dummies and interactions" ~ "All variables"
+        )
+    ) |> 
+    rename(`Combinación de variables` = 1, Hopkins = 2) |>
+    kable(booktabs = T, digits = 4)
+
+```
+
+El siguiente paso en este ejercicio fue calcular la precisión y varianza de cada método en cada conjunto de datos. Puesto que los modelos son determinísticos, i.e. siempre generan la misma segmentación para el mismo conjunto de datos, hicimos un ejercicio de remestrueo con 1,000 submuestras aleatorias con reemplazo del mismo tamaño de la muestra original de monstruos. El ejercicio de remuestreo nos permite calcular la precisión y varianza de cada modelo.
+
+La @fig-unsupervised muestra los resultados de remuestreo de los modelos no supervisados. En todos los modelos que consideramos, la inclusión de variables adicionales a las numéricas empeora la precisión sin mejorar la varianza de la predicción. Los modelos no supervisados producen una predicción correcta en un poco más del 70 por ciento de los monstruos en la muestra.
+
+```{r load-unsupervised}
+#| include: false
+
+
+load(here("resultados", "resampled_tests_unsupervised.RData"))
+
+
+
+resampled_tests$test[[1]]
+
+# Summarise results
+results <- resampled_tests |>
+    unnest(cols = c(test)) |>
+    select(-test_is) |>
+    # Pivot longer
+    pivot_longer(
+        cols = c(kmeans, hierarchical, pam),
+        names_to = "method",
+        values_to = "accuracy"
+    ) |>
+    group_by(data_id, method) |>
+    summarise(
+        mean = mean(accuracy),
+        sd = sd(accuracy),
+        # Confidence interval for the mean, according to empirical distribution
+        lower = mean - (quantile(accuracy, 0.025) * sd),
+        upper =  mean + (quantile(accuracy, 0.975) * sd)) |>
+    ungroup() 
+
+```
+
+```{r}
+#| label: fig-unsupervised
+#| fig-cap: "Resultados del remuestreo de entrenamiento no supervisado"
+#| fig-width: 8
+#| fig-height: 3
+
+
+# Plot results
+results |>
+    # Recode method
+    mutate(
+        method = case_when(
+            method == "kmeans" ~ "K-means",
+            method == "hierarchical" ~ "Hierarchical",
+            method == "pam" ~ "PAM"),
+
+        data_id = case_when(
+            data_id == "numeric" ~ "Numeric",
+            data_id == "color dummies" ~ "Numeric + Color",
+            data_id == "interactions" ~ "Numeric + Interactions",
+            data_id == "color dummies and interactions" ~ "All variables")
+    ) |>
+    ggplot( aes(
+            x = mean,
+            y = reorder(data_id, (mean)), 
+            # color = method,
+            # shape = data_id,
+             xmin = lower, 
+             xmax = upper
+             )) +
+    geom_pointrange(
+       ) +
+       facet_grid(cols = vars(method)) +
+       labs(
+           x = "Accuracy",
+           y = "",
+           color = "Method",
+           shape = "",
+           caprion = "95% condfidence"
+       ) +
+       scale_x_continuous(labels = scales::percent) +
+       # Remove legends for color and shape
+         guides(
+              color = FALSE,
+              shape = FALSE
+         ) 
+
+
+```
+
+La @tbl-supervised-confusion-3 muestra que el mejor modelo no supervisado segmenta bastante bien a los Ghost y Ghoul, pero confunde a los Goblin con Ghoul. Este resultado nos ayudará para la creación de nuestro monstruo.
+
+```{r unsupervised-confusion}
+#| include: false
+#| label: tbl-pam-confusion
+#| tbl-cap: "Matriz de confusión. Método PAM. Probabilidad de clasificación dada la categoría verdadera (%)."
+
+here("resultados", "pam.RData") |> load()
+
+# Confusion matrix of PAM results
+pam_confusion <- pam_res |>  
+    group_by(type, pam) |>
+    summarise(n = n()) |>
+    ungroup() |>
+    group_by(type) |>
+    mutate(
+        prop = n / sum(n) *100,
+        
+    ) |>
+    ungroup() |>
+    # Determine which cluster is which type
+    group_by(pam) |>
+    mutate(
+        prediction = type[which.max(n)]
+    ) |>
+    # Pivot wider
+    ungroup() |>
+    select(type, prediction, prop) |>
+    arrange(type, prediction) |>
+    pivot_wider(
+        names_from = type,
+        values_from = prop
+    ) |>
+    rename(
+        `Predicted` = prediction
+        # `Cluster 1` = 2,
+        # `Cluster 2` = 3,
+        # `Cluster 3` = 4
+    ) |>
+    kable(booktabs = T, digits = 2)
+
+pam_confusion
+
+```
+
+## Entrenamiento supervisado
+
+Los ejercicios anteriores sirvieron para guiar el entrenamiento supervisado de esta sección. Entrenamos modelos utilizando los métodos *Random Forest* y *GLM net*;[^1] *K-Nearest Neighbors*;[^2] así como *Neural Networks*, *Averaged Neural Networks* y *Bayesian GLM*.
+
+Para encontrar el modelo óptimo, entrenamos un modelo con cada método en cada una de las cuatro combinaciones de variables utilizadas anteriormente. La ventaja de este procedimiento es que, a través del remuestreo, obtendremos una medida de precisión y varianza en cada modelo, y tendremos un repertorio amplio de dónde seleccionar el mejor modelo.
+
+La @fig-supervised muestra los resultados de los ejercicios de entrenamiento supervisado. Resalta que los mejores modelos son el entrenado con GLM net con variables de interacción, así como el modelo de redes neuronales entrenado con solo variables numéricas.
+
+La @tbl-supervised-confusion muestra la matriz de confusión para estos modelos. Decidimos utilizar el modelo de redes neuronales para la competencia porque es mejor en detectar a los Goblin que el modelo de GLM net, sin perder precisión. Esta decisión nos dará una ventaja al predecir a los monstruos que los otros equipos generen basándose en GLM Net.
+
+```{r load-supervised}
+#| include: false
+
+load(here("resultados", "supervised_models.RData"))
+
+# Recode data_id 
+models <- models |>
+    mutate(
+        data_id = case_when(
+            data_id == "numeric" ~ "Numeric",
+            data_id == "color dummies" ~ "Numeric + Color",
+            data_id == "interactions" ~ "Numeric + Interactions",
+            data_id == "color dummies and interactions" ~ "All variables")
+    )
+
+```
+
+```{r}
+#| label: fig-supervised
+#| fig-cap: "Resultados del entrenamiento supervisado"
+#| layout-ncol: 2
+#| fig-subcap:
+#|  - "Random Forest"
+#|  - "GLM net"
+#|  - "Weighted KNN"
+#|  - "Neural Networks"
+#|  - "Averaged NN"
+#|  - "Bayesian GLM"
+#| fig-width: 5
+#| fig-height: 4
+
+plot_model_ci <- function(trained) {
+
+
+    resample <- resamples(trained |> set_names(models$data_id))
+
+    dotplot(resample, metric = "Accuracy", xlim = c(0.55, 0.85))
+
+}
+
+models$rf_model |>
+    plot_model_ci()
+
+models$glm_model |>
+    plot_model_ci()
+
+models$kknn_model |>
+    plot_model_ci()
+
+models$nn_model |>
+    plot_model_ci()
+
+models$avnn_model |>
+    plot_model_ci()
+
+models$bgl_model |>
+    plot_model_ci()
+
+
+
+```
+
+```{r compute-supervised-confusion}
+#| label: tbl-supervised-confusion
+#| tbl-cap: "Matriz de confusión para los mejores modelos. Probabilidad de clasificación dada la categoría verdadera (%)."
+#| tbl-subcap:
+#| - "GLM Net - Numeric + interactions"
+#| - "Neural Networks - Numeric"
+#| - "PAM - Numeric"
+#| layout-ncol: 2
+
+
+
+# GLM Confusion Matrix
+model_a <- models$glm_model[[3]]
+
+pred_a <- predict(model_a, models$data[[3]])
+
+cm_a <- confusionMatrix(data = pred_a, reference = factor(training$type))
+
+cm_a$table |>
+    as_tibble() |>
+    group_by(Reference) |>
+    mutate(n = n / sum(n) * 100) |>
+    ungroup() |>
+    pivot_wider(names_from = Prediction, values_from = n) |>
+    rename(`Predicted` = 1) |>
+    kable(booktabs = T, digits = 2)
+
+# NN Confusion Matrix
+model_b <- models$nn_model[[1]]
+
+pred_b <- predict(model_b, models$data[[1]])
+
+cm_b <- confusionMatrix(data = pred_b, factor(training$type))
+
+cm_b$table |> as_tibble() |>
+    group_by(Reference) |>
+    mutate(n = n / sum(n) * 100) |>
+    ungroup() |>
+    pivot_wider(names_from = Prediction, values_from = n) |>
+    rename(`Predicted` = 1) |>
+    kable(booktabs = T, digits = 2)
+
+# PAM confusion matrix from above
+pam_confusion
+
+```
+
+```{r rf-confusion}
+#| eval: false
+
+confusion.Matrix(model_a)
+
+terms <- model_a$finalModel
+
+supervised_confusion <- terms$confusion.matrix |>
+    as_tibble() |> 
+    group_by(true) |>
+    mutate(n = n / sum(n) * 100) |>
+    ungroup() |>
+    pivot_wider(names_from = true, values_from = n) |>
+    rename(`Predicted` = 1) |>
+    kable(booktabs = T, digits = 2)
+
+```
+
+```{r}
+#| eval: false
+#| label: tbl-confusion
+#| tbl-cap: "Matriz de confusión para los mejores modelos. Probabilidad de clasificación dada la categoría verdadera (%)."
+#| tbl-subcap: 
+#|  - "No supervisado: PAM"
+#|  - "Supervisado: GLM Net"
+#| layout-ncol: 2
+
+pam_confusion
+
+supervised_confusion
+
+
+```
+
+## Creación del monstruo
+
+Una vez que seleccionamos a nuestro modelo para el concurso, diseñamos a nuestro monstruo siguiendo el procedimiento descrito a continuación:
+
+1.  Creamos un caldero de 100,000 *monstruos*, con características generadas de forma aleatoria siguiendo una distribución uniforme continua.
+2.  Predecimos la categoría del monstruo de acuerdo al modelo de redes neuronales entrenado en la sección anterior. Además, calculamos la confianza con la que se hizo la predicción.
+3.  Desechamos del caldero a todos los monstruos cuya categoría predicha no fuera Goblin. Escogimos esta categoría porque es la más difícil de detectar en los modelos de mayor precisión que encontramos.
+4.  Encontramos al Goblin cuya confianza de predicción fuera mínima. En nuestro caso, fue de 0.5090. De esta manera, maximizamos la incertidumbre de clasificación que enfrentarán los otros equipos, asegurando que nuestro modelo lo categorizará correctamente.
+5.  Bautizamos a nuestro monstruo como Wenceslao.
+
+{{< pagebreak >}}
+
+## Referencias
+
+[^1]: Siguiendo a @thomas2016.
+
+[^2]: Siguiendo a @irizarry2019.

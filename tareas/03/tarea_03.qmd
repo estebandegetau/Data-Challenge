@@ -1,0 +1,298 @@
+---
+title: "Tarea 3"
+subvtitile: "Econometría Aplicada I"
+author: "Esteban Degetau"
+date: "`r Sys.Date()`"
+format: pdf
+fig-height: 2.5
+fig-width: 3
+execute:
+    echo: false
+    warning: false
+lang: es
+---
+
+```{r setup}
+#| include: false
+
+rm(list = ls())
+gc()
+
+pacman::p_load(tidyverse,
+               here,
+               tidyquant,
+               gganimate)
+
+here::i_am("tareas/03/tarea_03.Qmd")
+
+# Set ggplot default theme
+theme_set(theme_minimal())
+
+
+```
+
+
+```{r load-data}
+#| include: false
+
+insurance <- read_csv(here("datos/insurance_maestria.csv"))
+
+
+```
+
+1. Densidad de **BMI**.
+    a. La @fig-bmi-hist muestra istogramas con diferentes cantidades de bins. 
+
+    a. La @fig-bmi-moving-hist-2 muestra un histograma centrado con binwidth = 5.
+
+    a. El histograma centrado es equivalente a una densidad con kernel rectangular con bw = 5/2. La @fig-bmi-moving-hist muestra ambas gráficas.
+
+    a. La @fig-kernels muestra estimaciones de densidad con diferentes kernels.
+
+    a. La @fig-unif-1 muestra una densidad con kernel rectangular y bw = 0.1. La forma tan ruidosa de la gráfica se debe a ambas elecciones. Para contrastar, la @fig-unif-2 muestra una densidad con el mismo bw pero con kernel gaussiano, mientras que la figura @fig-kernels-1 usa kernel uniforme y bw = 5. El kernel rectangular es más sensible a cambios de bandwidth.
+
+
+```{r}
+#| label: fig-bmi-hist
+#| fig-cap: Histogramas de BMI
+#| fig-subcap: 
+#|  - "10 bins"
+#|  - "50 bins"
+#|  - "100 bins"
+#|  - "500 bins"
+#| layout-ncol: 2
+
+hist_bins <- function(data, bins) {
+
+    data |>
+    ggplot(aes(x = bmi)) +
+    geom_histogram(bins = bins) +
+    labs(x = "BMI", y = "Frecuencia") 
+
+}
+
+insurance |> hist_bins(10)
+
+insurance |> hist_bins(50)
+
+insurance |> hist_bins(100)
+
+insurance |> hist_bins(500)
+
+
+```
+
+
+```{r}
+#| label: fig-bmi-moving-hist
+#| fig-cap: Histograma centrado de BMI
+#| layout-ncol: 2
+#| fig-subcap:
+#| - "Histograma centrado"
+#| - "Densidad con kernel rectangular"
+
+
+
+# Moving center histogram
+insurance |>
+    ggplot(aes(x = bmi)) +
+    geom_histogram(
+        binwidth = 5, 
+    center = 2.5, 
+    position = "identity") +
+    labs(x = "BMI", y = "Frecuencia") 
+
+# Densidad con kernel rectangular
+insurance |> 
+    ggplot(aes(x = bmi)) +
+    geom_density(kernel = "rectangular", bw = 5/2) +
+    labs(x = "BMI", y = "Densidad")
+
+```
+
+    
+
+```{r}
+#| label: fig-kernels
+#| fig-cap: "Estimaciones de densidad con diferentes kernels"
+#| layout-ncol: 2
+#| fig-subcap:
+#|  - "Rectangular"
+#|  - "Triangular"
+#|  - "Gaussiano"
+#|  - "Epanechnikov"
+
+
+my_density <- function(data, kernel, bw = 5) {
+
+    data |>
+        ggplot(aes(x = bmi)) +  
+        geom_density(kernel = kernel, bw = bw) +
+        labs(x = "BMI", y = "Densidad")
+
+
+}
+
+insurance |> my_density("rectangular")
+
+insurance |> my_density("triangular")
+
+insurance |> my_density("gaussian")
+
+insurance |> my_density("epanechnikov")
+
+```
+
+
+```{r}
+#| label: fig-unif
+#| fig-cap: "Densidad con bw = 0.1"
+#| layout-ncol: 2
+#| fig-subcap:
+#|  - "Kernel rectangular"
+#|  - "Kernel gaussiano"
+
+insurance |> my_density("rectangular", 0.1)
+
+insurance |> my_density("gaussian", 0.1)
+
+
+```
+
+
+```{r}
+#| eval: false
+
+insurance |>
+    ggplot(aes(x = bmi)) +
+    geom_density(kernel = "gaussian", bw = "SJ-lscv")
+
+```
+
+```{r}
+# include: false
+
+# Wheights for Nadaraya Watson, using triangular kernel and bw = 2.5, at bmi = 25.
+
+ins_weight <- insurance |>
+    mutate(
+        w = case_when(
+            bmi <= 25 - 2.5 ~ 0,
+            bmi <= 25 + 2.5 ~ 1 - (abs(bmi - 25) / 2.5),
+            bmi > 25 + 2.5 ~ 0
+        )
+    ) 
+
+
+g_25 <- weighted.mean(ins_weight$charges, ins_weight$w) |> formatC(big.mark = ",", digits = 2, format = "f")
+
+```
+
+```{r}
+#| label: local-linear-regression
+#| include: false
+
+pacman::p_load(locfit)
+
+# Fit the local linear regression model
+fit <- locfit(
+    charges ~ bmi, 
+    data = insurance,
+    kern = "tria",
+    deg = 1 # Use a linear model
+      )
+
+# Compute the estimate for g(25)
+g_25_llr <- predict(fit, newdata = data.frame(bmi = 25))  |> formatC(big.mark = ",", digits = 2, format = "f")
+
+
+
+
+```
+
+2. **Charges**.
+
+    a. La @fig-charges muestra la media condicional de los cobros por BMI utilizando diferentes métodos. Observo tres distintas estimaciones para $\mathbb{E}[Charges_i|MBI_i]$. (i) el scatterplot utilizando binwidth=5 es una escalera que va incrementando cada 5 unidades de BMI. (ii) una línea de regresión lineal utilizando OLS, que estima una relación lineal entre BMI y cobros. (iii) una línea de regresión cuadrática utilizando OLS, que estima una relación cuadrática entre BMI y cobros.
+
+    b. El scatterplot para la media condicional de Charges dado BMI con bandwidth=5 es equivalente a una estimación *Nadaraya Watson* con bandwith = 2.5 y kernel rectangular.
+
+    c. La @fig-triangle muestra los pesos para la estimación *Nadaraya Watson* con kernel triangular y bw = 2.5 en BMI = 25. El valor estimado $\hat{g(25)}$=$`r g_25`.
+
+    d. Usando regresión lineal local con un kernel triangular obtuve $\hat{g(25)}$=$`r g_25_llr`.
+
+```{r}
+#| label: fig-charges
+#| fig-cap: "Media condicional de cobros dado BMI"
+#| fig-height: 3
+#| fig-width: 5
+
+b <- max(insurance$bmi)
+a <- min(insurance$bmi)
+
+
+bins <- ((b - a) / 5)  
+
+insurance |>
+    arrange((bmi)) |>
+    mutate(
+        bmi_bin = case_when(
+            bmi < a + (5)   ~ 1,
+            bmi < a + 2*(5) ~ 2,
+            bmi < a + 3*(5) ~ 3,
+            bmi < a + 4*(5) ~ 4,
+            bmi < a + 5*(5) ~ 5,
+            bmi < a + 6*(5) ~ 6,
+            bmi < a + 7*(5) ~ 7,
+            bmi < a + 8*(5) ~ 8
+
+        )
+        ) |>
+    group_by(bmi_bin) |>
+
+    summarise(
+        charges = mean(charges),
+        bin_bmi = a + (bmi_bin - 1) * 5
+        
+        ) |>
+
+    ggplot(aes(bin_bmi, charges)) +
+    geom_step(aes(color = "Binwidth = 5", x = bin_bmi)) +
+
+    geom_smooth(
+        data = insurance,
+        aes(x = bmi, y = charges, color = "Poly(1) OLS"),
+        method = lm,
+        se = F,
+        
+    ) +
+    geom_smooth(
+        data = insurance,
+        aes(x = bmi, y = charges, color = "Poly(2) OLS"),
+        method = lm,
+        formula = y ~ poly(x, 2),
+        se = F,
+        
+    ) +
+    labs(x = "BMI", y = "E(Charges | BMI)", color = "") 
+
+
+
+```
+
+
+```{r}
+#| label: fig-triangle
+#| fig-cap: "Pesos para Nadaraya Watson con kernel triangular y bw = 2.5 en BMI = 25"
+
+
+
+ins_weight |>
+    ggplot(aes(x = bmi, y = w)) +
+    geom_line() +
+    labs(x = "BMI", y = "Weight")
+
+
+
+```
+
+

@@ -1,0 +1,92 @@
+---
+title: "Tarea 3"
+subvtitile: "Econometría Aplicada I"
+author: "Esteban Degetau"
+date: "`r Sys.Date()`"
+format: pdf
+fig-height: 2.5
+fig-width: 3
+execute:
+    echo: false
+    warning: false
+---
+
+```{r setup}
+#| include: false
+
+rm(list = ls())
+gc()
+
+pacman::p_load(tidyverse,
+               here)
+
+here::i_am("tareas/03/tarea_03.Qmd")
+
+# Set ggplot default theme
+theme_set(theme_minimal())
+
+
+```
+
+
+```{r load-data}
+#| include: false
+
+insurance <- read_csv(here("datos/insurance_maestria.csv"))
+
+
+```
+
+1. **BMI**
+    a. La @fig-bmi-hist muestra istogramas con diferentes cantidades de bins. 
+
+```{r}
+#| label: fig-bmi-hist
+#| fig-cap: Histogramas de BMI
+#| fig-subcap: 
+#|  - "10 bins"
+#|  - "50 bins"
+#|  - "100 bins"
+#|  - "500 bins"
+#| layout-ncol: 2
+
+hist_bins <- function(data, bins) {
+
+    data |>
+    ggplot(aes(x = bmi)) +
+    geom_histogram(bins = bins) +
+    labs(x = "BMI", y = "Frecuencia") 
+
+}
+
+insurance |> hist_bins(10)
+
+insurance |> hist_bins(50)
+
+insurance |> hist_bins(100)
+
+insurance |> hist_bins(500)
+
+
+```
+
+
+
+```{r}
+
+insurance |>
+    ggplot(aes(x = bmi)) +
+    stat_bin(binwidth = 5, center = 0.) 
+
+insurance |>
+    ggplot(aes(x = bmi)) +
+    geom_freqpoly(binwidth = 5) 
+
+
+insurance |> 
+    ggplot(aes(x = bmi)) +
+    geom_density(kernel = "rectangular") 
+
+
+
+```

@@ -1,0 +1,326 @@
+---
+title: "Taller 007"
+subtitle: "Taller de Econometría Aplicada I"
+author: "Julieta Pérez, Esteban Degetau"
+format: pdf
+lang: es
+execute:
+  echo: true
+  warning: false
+  message: false
+  include: false
+  cache: true
+---
+
+```{r setup}
+
+# Libraries
+pacman::p_load(tidyverse, here, readxl, fixest, stargazer, broom, lmtest, sandwich, car, ggpubr, ggsci, ggthemes, gganimate, ggrepel, ggExtra, ggcorrplot, gridExtra, grid, gridGraphics, gridBase, gridSVG, kableExtra)
+
+here::i_am("talleres/taller_007.Qmd")
+
+
+```
+
+```{r data}
+
+college <- here("datos", "CollegeDistance (2).xls") |> read_xls()
+
+```
+
+1. En la @tbl-edu-dist mostramos la relación lineal entre distancia al colegio y años de educación. Encontramos que por cada 10 millas de distancia, los años de educación disminuyen en promedio 0.07 años. La relación inversa confirma la distancia de la universidad es un costo para las personas estudiantes. El coeficiente es estadísticamente significativo al 1%.
+
+```{r}
+#| include: true
+#| results: 'asis'
+#| label: tbl-edu-dist
+#| tbl-cap: "Relación entre educación y distancia a la universidad"
+
+
+college |>
+    feols(ed ~ dist) |>
+    etable(tex = T)
+
+```
+
+2. Al incluir controles como en la @tbl-edu-control, efecto estimado de la distancia a la universidad en años de educación disminuyó respecto de la estimación sin controles en la @tbl-edu-dist. En particular, obtenemos que por cada 10 millas adicionales, se estudiará solo 0.03 años menos. Adicinalmente, a pesar de que el coeficiente sigue siendo estadísticamente significativo, lo es solo al 5%.
+
+```{r}
+#| include: true
+#| results: 'asis'
+#| label: tbl-edu-control
+#| tbl-cap: "Relación entre educación y distancia a la universidad con controles"
+
+
+reg_control <- college |>
+    feols(ed ~ dist + bytest + female + black + hispanic
+    + incomehi + ownhome + dadcoll + cue80 + stwmfg80) 
+
+reg_control |>
+    etable(tex = T, ci = 0.95, coefstat = "confint")
+
+```
+
+3. Sí puede ser que la regresión en la @tbl-edu-dist esté sesgada, puesto que no se incluyen controles que pueden estar correlacionados con la distancia a la universidad y con los años de educación. Por ejemplo, puede ser que las familias afroamericanas vivan más lejos de las universidads y que también estudien menos años en promedio por razones distintas a la distancia. En ese caso, no incluir la variable `black` puede sesgar nuestros estimadores. 
+
+4. La regresión en la @tbl-edu-control tiene un mejor ajuste a los datos. Presenta un $\bar R^2$ de 0.277 mientras que la regresión en la @tbl-edu-dist tiene un $\bar R^2$ de 0.007. En la regresión con controles, en la @tbl-edu-control, los estimadores $R^2$ y $\bar R^2$ se asemejan mucho porque las variables de control que incluimos agregan mucha información adicional al modelo. Es decir que las variables explicativas no están muy correlacionadas entre sí. El error estándar asociado a la variable `dist` no cambió mucho entre estimaciones, lo que sí cambió fue la magnitud de los coeficientes, que a su vez modificó la significancia estadística de los mismos.
+
+
+
+5. El coeficiente asociado a la variable `DadCol` tiene signo positivo y es estadísticamente distinto de cero. Podemos interpretar el intervalo de confianza asociado a él como que 95 por ciento de las estimaciones caerán en el intervalo [0.5617, 0.8309]. Esto quiere decir que, en promedio, los hijos de padres con educación universitaria estudiarán entre 0.56 y 0.83 años más que los hijos de padres sin educación universitaria.
+
+6. Las variables `cue80` y `swmfg80` representan el costo de oportunidad de estudiar. En particular, la tasa de desempleo del condado en 1980 `cue80` indica la facilidad con la que un egresedado de preparatoria podrá encontrar un empleo. Si ésta es alta, entonces el costo de oportunidad de estudiar baja porque será más difícil encontrar un empleo, y entonces en mayor medida preferirá estudiar (tendrá singo positivo) . Por el lado de `swmfg80`, el salario promedio en manufacturas indica el salario que podría ganar un egresado de preparatoria si no estudiara. Si este salario es alto, entonces el costo de oportunidad de estudiar es alto, y entonces en mayor medida preferirá no estudiar (tendrá signo negativo).
+
+    Ambas variables tienen el signo esperado y son estadísticamente distintas de cero. En particular, por cada punto porcentual que aumente la tasa de desempleo, los años de educación aumentarán en 0.023 años. Por cada dólar que aumente el salario por hora promedio en manufacturas, los años de educación disminuirán en 0.052 años.
+
+7. En la @tbl-bob moestramos la estimación de años de educación para Bob. Estudiará 14.22 años en promedio, con un intervalo de confianza de 95% entre 13.73 y 14.72 años.
+
+```{r}
+#| include: true
+#| label: tbl-bob
+#| tbl-cap: "Predicción de años de educación para Bob"
+
+
+bob <- tibble(
+    female = 0,
+    black = 1,
+    hispanic = 0,
+    bytest = 58,
+    dadcoll = 0,
+    incomehi = 1,
+    ownhome = 1,
+    cue80 = 7.5,
+    stwmfg80 = 9.75,
+    dist = 20
+)
+
+predict(reg_control, bob, ci = T, interval = "confidence") |>
+    kable(digits = 2, booktabs = T)
+
+
+```
+
+8. En la @tbl-jim mostramos la estimación de años de educación para Jim. Estudiará 13.59 años en promedio, con un intervalo de confianza de 95% entre 12.63 y 14.56 años.
+
+```{r}
+#| include: true
+#| label: tbl-jim
+#| tbl-cap: "Predicción de años de educación para Jim"
+
+
+jim <- tibble(
+    female = 0,
+    black = 1,
+    hispanic = 0,
+    bytest = 58,
+    dadcoll = 0,
+    incomehi = 1,
+    ownhome = 1,
+    cue80 = 7.5,
+    stwmfg80 = 9.75,
+    dist = 40
+)
+
+predict(reg_control, jim, ci = T, interval = "confidence") |>
+    kable(digits = 2, booktabs = T)
+
+```
+
+9. En la regresión en la @tbl-edu-control no podemos hacer aceveraciones sobre la cantidad de cursos que se estudiaron en la universidad. Sin embargo, sí podemos decir que, todo lo demás constante, las personas afroamericanas estudian 0.34 años más que las personas blancas, y las hispanas estudian 0.39 años más que las personas blancas.
+
+10. Como estimamos un modelo lineal, el cambio en los años de educación asociado a un cambio en la distancia a la universidad es constante. Es decir, no depende de la distancia a la universidad. Por lo tanto, un cambio de 60 a 70 millas esta dado por la pendiente en el coeficiente de `dist`. En particular, por cada 10 millas adicionales, los años de educación disminuyen en 0.037 años. Por lo tanto, un cambio de 60 a 70 millas implica una disminución de 0.37 años en los años de educación.
+
+```{r}
+#| include: true
+#| label: tbl-edu-ten
+#| tbl-cap: "Relación entre educación y distancia a la universidad con controles adicionales"
+#| results: 'asis'
+
+reg_10 <- college |>
+    feols(ed ~ dist + female + bytest + tuition + black + hispanic + incomehi + ownhome + dadcoll + momcoll + cue80 + stwmfg80) 
+
+reg_10 |>
+    etable(tex = T, ci = 0.95, coefstat = "confint")
+
+```
+
+
+<!-- 11. Realice una regresi´on del ln(ED) sobre las variables Dist, Female, Bytest, Tuition, Black, Hispanic, Incomehi, Ownhome, DadColl, MomColl,
+Cue80 y Stwmfg80. Si la variable Dist aumenta de 2 a 3 (de 20 a 30 millas), ¿cu´anto se espera que cambien los a˜nos de educaci´on? Si la variable
+Dist aumenta de 6 a 7 (es decir, de 60 a 70 millas), ¿cu´anto se espera que
+cambien los a˜nos de educaci´on? -->
+
+```{r}
+#| include: true
+#| label: tbl-edu-eleven
+#| tbl-cap: "Relación entre logaritmo de educación y distancia a la universidad con controles adicionales"
+#| results: 'asis'
+
+reg_11 <- college |>
+    feols(log(ed) ~ dist + female + bytest + tuition + black + hispanic + incomehi + ownhome + dadcoll + momcoll + cue80 + stwmfg80) 
+
+reg_11 |>
+    etable(tex = T, ci = 0.95, coefstat = "confint")
+
+```
+
+```{r}
+
+
+datos_11_a <- tibble(
+    dist = c(2, 3),
+    female = c(0, 0),
+    bytest = c(58, 58),
+    tuition = c(2.5, 2.5),
+    black = c(0, 0),
+    hispanic = c(0, 0),
+    incomehi = c(1, 1),
+    ownhome = c(1, 1),
+    dadcoll = c(0, 0),
+    momcoll = c(0, 0),
+    cue80 = c(7.5, 7.5),
+    stwmfg80 = c(9.75, 9.75)
+)
+
+pred_1 <- predict(reg_11, datos_11_a, ci = T, interval = "confidence") 
+pred_1 |> str()
+exp(pred_1$fit)
+dif_1 <- (exp(pred_1$fit[2]) - exp(pred_1$fit[1])) |> abs() |> round(4)
+
+dif_1
+
+# Ahora de 6 a 7
+datos_11_b <- tibble(
+    dist = c(6, 7),
+    female = c(0, 0),
+    bytest = c(58, 58),
+    tuition = c(2.5, 2.5),
+    black = c(0, 0),
+    hispanic = c(0, 0),
+    incomehi = c(1, 1),
+    ownhome = c(1, 1),
+    dadcoll = c(0, 0),
+    momcoll = c(0, 0),
+    cue80 = c(7.5, 7.5),
+    stwmfg80 = c(9.75, 9.75)
+)
+
+pred_2 <- predict(reg_11, datos_11_b, ci = T, interval = "confidence") 
+pred_2 |> str()
+exp(pred_2$fit)
+dif_2 <- (exp(pred_2$fit[2]) - exp(pred_2$fit[1])) |> abs() |> round(4)
+
+dif_2
+
+```
+
+11. Al pasar de 20 a 30 millas de distancia de una universidad se pierden `r dif_1` años de educación. Al pasar de 60 a 70 millas, se pierden `r dif_2` años. 
+
+
+
+```{r}
+
+reg_12 <- college |>
+feols(
+    ed ~ dist + dist^2 + female + bytest + tuition + black + hispanic + incomehi + ownhome + dadcoll + momcoll + cue80 + stwmfg80
+)
+
+
+
+datos_11_a <- tibble(
+    dist = c(2, 3),
+    female = c(0, 0),
+    bytest = c(58, 58),
+    tuition = c(2.5, 2.5),
+    black = c(0, 0),
+    hispanic = c(0, 0),
+    incomehi = c(1, 1),
+    ownhome = c(1, 1),
+    dadcoll = c(0, 0),
+    momcoll = c(0, 0),
+    cue80 = c(7.5, 7.5),
+    stwmfg80 = c(9.75, 9.75)
+)
+
+pred_1 <- predict(reg_12, datos_11_a, ci = T, interval = "confidence") 
+pred_1 |> str()
+exp(pred_1$fit)
+dif_1_12 <- (pred_1$fit[2]- pred_1$fit[1]) |> abs() |> round(4)
+
+
+
+# Ahora de 6 a 7
+datos_11_b <- tibble(
+    dist = c(6, 7),
+    female = c(0, 0),
+    bytest = c(58, 58),
+    tuition = c(2.5, 2.5),
+    black = c(0, 0),
+    hispanic = c(0, 0),
+    incomehi = c(1, 1),
+    ownhome = c(1, 1),
+    dadcoll = c(0, 0),
+    momcoll = c(0, 0),
+    cue80 = c(7.5, 7.5),
+    stwmfg80 = c(9.75, 9.75)
+)
+
+pred_2 <- predict(reg_12, datos_11_b, ci = T, interval = "confidence") 
+pred_2 |> str()
+exp(pred_2$fit)
+dif_2_12 <- (pred_2$fit[2]-pred_2$fit[1]) |> abs() |> round(4)
+
+```
+
+12. Incluyendo distancia como término cuadrático, encontramos que al pasar de 20 a 30 millas de distancia de una universidad se pierden `r dif_1_12` años de educación. Al pasar de 60 a 70 millas, se pierden `r dif_2_12` años.
+
+```{r}
+#| include: true
+#| label: tbl-edu-interaction
+#| results: 'asis'
+#| tbl-cap: "Relación entre educación y distancia a la universidad con interacción entre educación de los padres y controles adicionales"
+
+reg_13 <- college |>
+feols(
+    ed ~ dist + dist^2 + female + bytest + tuition + black + hispanic + incomehi + ownhome + dadcoll * momcoll + cue80 + stwmfg80
+)
+
+etable(reg_13, tex = T)
+
+
+```
+
+13. El coeficiente del término de interacción en la @tbl-edu-interaction es significativamente negativo e indica que, todo lo demás constante, tener ambos padres que asistieron a universidad disminuye los años de educación en 0.36 años. A pesar de ser contraintuitivo, porque las variables `dadcoll` y `momcoll` están altamente correlacionadas, su interacción resta a la suma de cada uno de los coeficientes.
+
+```{r}
+#| include: true
+#| label: tbl-edu-candidates
+#| tbl-cap: "Predicción de años de educación para candidatos"
+
+candidates <- tibble(
+    candidato = c("Mary", "Jane", "Alexis", "Bonnie"),
+    dist =      c(rep(1, 4)),
+    female =   c(rep(1, 4)),
+    bytest =   c(rep(58, 4)),
+    tuition =  c(rep(2.5, 4)),
+    black =    c(rep(0, 4)),
+    hispanic = c(rep(0, 4)),
+    incomehi = c(rep(1, 4)),
+    ownhome =  c(rep(1, 4)),
+    dadcoll = c(0, 1, 0, 1),
+    momcoll = c(0, 0, 1, 1),
+    cue80 = c(rep(7.5, 4)),
+    stwmfg80 = c(rep(9.75, 4))
+
+)
+
+predict(reg_13, candidates, ci = T, interval = "confidence") |>
+bind_cols(candidato = candidates$candidato) |>
+    kable(digits = 2, booktabs = T)
+
+
+```
+
+14. La @tbl-edu-candidates muestra resultados consistentes con los coeficientes en la @tbl-edu-interaction. De hecho, Bonnie que tiene dos padres con educación universitaria es la que más años estudiará (todo lo demás constante). Jane estudiará 0.66 años más que Mary. Alexis estudiará 0.57 años más que Mary. Bonnie estudiará 0.86 años más que Mary.
+
+15. Para concluir, encontramos que la distancia de la universidad al hogar de los candidatos tendrá un efecto negativo pero con tasas decrecientes. Para aumentar los años de educación, los datus sugieren proponer (i) vales de renta para subsidiar la habitación cerca de las universidades. (ii) Mejorar las vías de transporte a las universidades, para disminuir el costo de asistir. Y (iii) construir más universidades en lugares inóspitos para proveer educación a personas que no tienen acceso a ella.
