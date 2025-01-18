@@ -1,0 +1,1277 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\LENOVO\OneDrive - INSTITUTO TECNOLOGICO AUTONOMO DE MEXICO\ITAM\Econometría Aplicada I\resultados\taller-12.txt
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}28 Oct 2023, 10:12:47
+{txt}
+{com}. 
+. //-- Load data -----------------------------------------------------------------
+. 
+. clear all
+{res}{txt}
+{com}. 
+. use "C:\Users\LENOVO\OneDrive - INSTITUTO TECNOLOGICO AUTONOMO DE MEXICO\ITAM\Econometría Aplicada I\datos\hrs.dta"
+{txt}
+{com}. 
+. //-- Preguntas -----------------------------------------------------------------
+. 
+. * 1. Lectura de los datos
+. 
+. describe
+
+{txt}Contains data from {res}C:\Users\LENOVO\OneDrive - INSTITUTO TECNOLOGICO AUTONOMO DE MEXICO\ITAM\Econometría Aplicada I\datos\hrs.dta
+{txt} Observations:{res}         3,206                  
+{txt}    Variables:{res}            35                  16 Jul 2008 10:47
+{txt}{hline}
+Variable      Storage   Display    Value
+    name         type    format    label      Variable label
+{hline}
+{p 0 48}{res}{bind:personid       }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:private        }{txt}{bind: float   }{bind:%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:eprhi          }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:age            }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:hisp           }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:white          }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:female         }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:educyear       }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:married        }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:excel          }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:vegood         }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:good           }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:fair           }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:poor           }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:chronic        }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:adl            }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:retire         }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:seprhi         }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:sretire        }{txt}{bind: double  }{bind:%12.0g    }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:hhincome       }{txt}{bind: float   }{bind:%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:ins            }{txt}{bind: float   }{bind:%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:age2           }{txt}{bind: float   }{bind:%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:hstatusg       }{txt}{bind: float   }{bind:%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:agefem         }{txt}{bind: float   }{bind:%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:agechr         }{txt}{bind: float   }{bind:%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:agewhi         }{txt}{bind: float   }{bind:%9.0g     }{space 1}{bind:         }{bind:  }{res}{res}{p_end}
+{p 0 48}{bind:_est_blogit    }{txt}{bind: byte    }{bind:%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_bprobit   }{txt}{bind: byte    }{bind:%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_bOLS      }{txt}{bind: byte    }{bind:%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_bloghet   }{txt}{bind: byte    }{bind:%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_bprobhet  }{txt}{bind: byte    }{bind:%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_bOLShet   }{txt}{bind: byte    }{bind:%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_PROBIT    }{txt}{bind: byte    }{bind:%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_IVPROBML  }{txt}{bind: byte    }{bind:%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{p 0 48}{bind:_est_IVPROB2S  }{txt}{bind: byte    }{bind:%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}esample() from estimates store{p_end}
+{txt}{hline}
+Sorted by: {res}hhincome
+{txt}
+{com}. 
+. global xlist age hstatusg hhincome educyear married hisp
+{txt}
+{com}. 
+. 
+. 
+. * 2. Descripcion de los datos
+. 
+. summarize
+
+{txt}    Variable {c |}        Obs        Mean    Std. dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 4}personid {c |}{res}      3,206    4.86e+07    2.32e+07   1.00e+07   9.96e+07
+{txt}{space 5}private {c |}{res}      3,206    .3870867    .4871597          0          1
+{txt}{space 7}eprhi {c |}{res}      3,206    .0168434    .1287046          0          1
+{txt}{space 9}age {c |}{res}      3,206    66.91391    3.675794         52         86
+{txt}{space 8}hisp {c |}{res}      3,206    .0726762    .2596448          0          1
+{txt}{hline 13}{c +}{hline 57}
+{space 7}white {c |}{res}      3,206    .8206488     .383706          0          1
+{txt}{space 6}female {c |}{res}      3,206     .477854    .4995872          0          1
+{txt}{space 4}educyear {c |}{res}      3,206    11.89863    3.304611          0         17
+{txt}{space 5}married {c |}{res}      3,206    .7330006     .442461          0          1
+{txt}{space 7}excel {c |}{res}      3,206    .1129133    .3165361          0          1
+{txt}{hline 13}{c +}{hline 57}
+{space 6}vegood {c |}{res}      3,206    .2813475    .4497268          0          1
+{txt}{space 8}good {c |}{res}      3,206    .3103556    .4627113          0          1
+{txt}{space 8}fair {c |}{res}      3,206    .2049283    .4037122          0          1
+{txt}{space 8}poor {c |}{res}      3,206    .0904554    .2868778          0          1
+{txt}{space 5}chronic {c |}{res}      3,206    2.063319    1.416434          0          8
+{txt}{hline 13}{c +}{hline 57}
+{space 9}adl {c |}{res}      3,206     .301622    .8253646          0          5
+{txt}{space 6}retire {c |}{res}      3,206    .6247661    .4842588          0          1
+{txt}{space 6}seprhi {c |}{res}      3,206     .073612    .2611791          0          1
+{txt}{space 5}sretire {c |}{res}      3,206    .3883344    .4874473          0          1
+{txt}{space 4}hhincome {c |}{res}      3,206    45.26391    64.33936          0   1312.124
+{txt}{hline 13}{c +}{hline 57}
+{space 9}ins {c |}{res}      3,206    .3870867    .4871597          0          1
+{txt}{space 8}age2 {c |}{res}      3,206    4490.979    494.6735       2704       7396
+{txt}{space 4}hstatusg {c |}{res}      3,206    .7046163    .4562862          0          1
+{txt}{space 6}agefem {c |}{res}      3,206    31.52807     33.0326          0         79
+{txt}{space 6}agechr {c |}{res}      3,206    137.4969    93.97369          0        544
+{txt}{hline 13}{c +}{hline 57}
+{space 6}agewhi {c |}{res}      3,206    55.04648    25.93915          0         82
+{txt}{space 1}_est_blogit {c |}{res}      3,206           1           0          1          1
+{txt}_est_bprobit {c |}{res}      3,206           1           0          1          1
+{txt}{space 3}_est_bOLS {c |}{res}      3,206           1           0          1          1
+{txt}_est_bloghet {c |}{res}      3,206           1           0          1          1
+{txt}{hline 13}{c +}{hline 57}
+_est_bpro~et {c |}{res}      3,206           1           0          1          1
+{txt}_est_bOLShet {c |}{res}      3,206           1           0          1          1
+{txt}{space 1}_est_PROBIT {c |}{res}      3,206           1           0          1          1
+{txt}_est_IVPRO~L {c |}{res}      3,206           1           0          1          1
+{txt}_est_IVPR~2S {c |}{res}      3,206           1           0          1          1
+{txt}
+{com}. inspect
+
+{res}personid:                                       {txt}Number of observations
+{hline 11}                            {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}          {res}#                 {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#   #   #                 {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#   #   #                 {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #   #   #                       {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #   #   #   #         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #   #   #   #         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1.00e+07       9.96e+07                      3,206
+(More than 99 unique values)
+
+private:                                        {txt}Number of observations
+{hline 10}                             {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      1,965         1,965             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      1,241         1,241             -
+{txt}{c |}  {res}#   #                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+eprhi:                                          {txt}Number of observations
+{hline 8}                               {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      3,152         3,152             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}         54            54             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   .                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+age:                                            {txt}Number of observations
+{hline 6}                                 {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}          {res}#                 {txt}Negative            {res}-             -             -
+{txt}{c |}          {res}#                 {txt}Zero                {res}-             -             -
+{txt}{c |}          {res}#                 {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}          {res}#                           {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}      {res}#   #                 {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}.   #   #   .   .         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}52                   86                      3,206
+  (33 unique values)
+
+hisp:                                           {txt}Number of observations
+{hline 7}                                {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      2,973         2,973             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}        233           233             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   .                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+white:                                          {txt}Number of observations
+{hline 8}                               {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}      {res}#                     {txt}Negative            {res}-             -             -
+{txt}{c |}      {res}#                     {txt}Zero      {res}        575           575             -
+{txt}{c |}      {res}#                     {txt}Positive  {res}      2,631         2,631             -
+{txt}{c |}      {res}#                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}      {res}#                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+female:                                         {txt}Number of observations
+{hline 9}                              {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#   #                     {txt}Zero      {res}      1,674         1,674             -
+{txt}{c |}  {res}#   #                     {txt}Positive  {res}      1,532         1,532             -
+{txt}{c |}  {res}#   #                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+educyear:                                       {txt}Number of observations
+{hline 11}                            {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}              {res}#             {txt}Negative            {res}-             -             -
+{txt}{c |}              {res}#             {txt}Zero      {res}         16            16             -
+{txt}{c |}              {res}#             {txt}Positive  {res}      3,190         3,190             -
+{txt}{c |}              {res}#   #                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}          {res}#   #   #         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}.   .   #   #   #         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                    17                      3,206
+  (18 unique values)
+
+married:                                        {txt}Number of observations
+{hline 10}                             {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}      {res}#                     {txt}Negative            {res}-             -             -
+{txt}{c |}      {res}#                     {txt}Zero      {res}        856           856             -
+{txt}{c |}      {res}#                     {txt}Positive  {res}      2,350         2,350             -
+{txt}{c |}      {res}#                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+excel:                                          {txt}Number of observations
+{hline 8}                               {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      2,844         2,844             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}        362           362             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   .                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+vegood:                                         {txt}Number of observations
+{hline 9}                              {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      2,304         2,304             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}        902           902             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+good:                                           {txt}Number of observations
+{hline 7}                                {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      2,211         2,211             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}        995           995             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+fair:                                           {txt}Number of observations
+{hline 7}                                {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      2,549         2,549             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}        657           657             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+poor:                                           {txt}Number of observations
+{hline 7}                                {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      2,916         2,916             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}        290           290             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   .                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+chronic:                                        {txt}Number of observations
+{hline 10}                             {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}      {res}#                     {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#   #                     {txt}Zero      {res}        386           386             -
+{txt}{c |}  {res}#   #                     {txt}Positive  {res}      2,820         2,820             -
+{txt}{c |}  {res}#   #                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #   #   .   .         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     8                      3,206
+   (9 unique values)
+
+adl:                                            {txt}Number of observations
+{hline 6}                                 {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      2,693         2,693             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}        513           513             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   .   .   .   .         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     5                      3,206
+   (6 unique values)
+
+retire:                                         {txt}Number of observations
+{hline 9}                              {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}      {res}#                     {txt}Negative            {res}-             -             -
+{txt}{c |}      {res}#                     {txt}Zero      {res}      1,203         1,203             -
+{txt}{c |}      {res}#                     {txt}Positive  {res}      2,003         2,003             -
+{txt}{c |}  {res}#   #                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+seprhi:                                         {txt}Number of observations
+{hline 9}                              {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      2,970         2,970             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}        236           236             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   .                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+sretire:                                        {txt}Number of observations
+{hline 10}                             {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      1,961         1,961             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      1,245         1,245             -
+{txt}{c |}  {res}#   #                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+hhincome:                                       {txt}Number of observations
+{hline 11}                            {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}          9             9             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,197            93         3,104
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206           102         3,104
+{txt}{c |}  {res}#   .   .   .   .         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0              1312.124                      3,206
+(More than 99 unique values)
+
+ins:                                            {txt}Number of observations
+{hline 6}                                 {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      1,965         1,965             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      1,241         1,241             -
+{txt}{c |}  {res}#   #                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+age2:                                           {txt}Number of observations
+{hline 7}                                {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}      {res}#                     {txt}Negative            {res}-             -             -
+{txt}{c |}      {res}#                     {txt}Zero                {res}-             -             -
+{txt}{c |}      {res}#   #                 {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}      {res}#   #                           {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}      {res}#   #                 {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}.   #   #   .   .         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}2704               7396                      3,206
+  (33 unique values)
+
+hstatusg:                                       {txt}Number of observations
+{hline 11}                            {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}      {res}#                     {txt}Negative            {res}-             -             -
+{txt}{c |}      {res}#                     {txt}Zero      {res}        947           947             -
+{txt}{c |}      {res}#                     {txt}Positive  {res}      2,259         2,259             -
+{txt}{c |}      {res}#                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #                     {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                     1                      3,206
+   (2 unique values)
+
+agefem:                                         {txt}Number of observations
+{hline 9}                              {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero      {res}      1,674         1,674             -
+{txt}{c |}  {res}#               #         {txt}Positive  {res}      1,532         1,532             -
+{txt}{c |}  {res}#               #                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#               #         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   .   .   .   #         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                    79                      3,206
+  (28 unique values)
+
+agechr:                                         {txt}Number of observations
+{hline 9}                              {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}      {res}#                     {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#   #                     {txt}Zero      {res}        386           386             -
+{txt}{c |}  {res}#   #                     {txt}Positive  {res}      2,820         2,820             -
+{txt}{c |}  {res}#   #                               {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#   #                     {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   #   #   .   .         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                   544                      3,206
+(More than 99 unique values)
+
+agewhi:                                         {txt}Number of observations
+{hline 9}                              {hline 39}
+                                             Total      Integers   Nonintegers
+{c |}                  {res}#         {txt}Negative            {res}-             -             -
+{txt}{c |}                  {res}#         {txt}Zero      {res}        575           575             -
+{txt}{c |}                  {res}#         {txt}Positive  {res}      2,631         2,631             -
+{txt}{c |}                  {res}#                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}              {res}#   #         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#   .   .   #   #         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}0                    82                      3,206
+  (32 unique values)
+
+_est_blogit:  esample() from estimates s        {txt}Number of observations
+{hline 40}{hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#                         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1                                            3,206
+   (1 unique value)
+
+_est_bprobit:  esample() from estimates         {txt}Number of observations
+{hline 40}{hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#                         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1                                            3,206
+   (1 unique value)
+
+_est_bOLS:  esample() from estimates sto        {txt}Number of observations
+{hline 40}{hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#                         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1                                            3,206
+   (1 unique value)
+
+_est_bloghet:  esample() from estimates         {txt}Number of observations
+{hline 40}{hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#                         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1                                            3,206
+   (1 unique value)
+
+_est_bprobhet:  esample() from estimates        {txt}Number of observations
+{hline 40}{hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#                         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1                                            3,206
+   (1 unique value)
+
+_est_bOLShet:  esample() from estimates         {txt}Number of observations
+{hline 40}{hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#                         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1                                            3,206
+   (1 unique value)
+
+_est_PROBIT:  esample() from estimates s        {txt}Number of observations
+{hline 40}{hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#                         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1                                            3,206
+   (1 unique value)
+
+_est_IVPROBML:  esample() from estimates        {txt}Number of observations
+{hline 40}{hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#                         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1                                            3,206
+   (1 unique value)
+
+_est_IVPROB2S:  esample() from estimates        {txt}Number of observations
+{hline 40}{hline 39}
+                                             Total      Integers   Nonintegers
+{c |}  {res}#                         {txt}Negative            {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Zero                {res}-             -             -
+{txt}{c |}  {res}#                         {txt}Positive  {res}      3,206         3,206             -
+{txt}{c |}  {res}#                                   {txt}{hline 11}   {hline 11}   {hline 11}
+{c |}  {res}#                         {txt}Total     {res}      3,206         3,206             -
+{txt}{c |}  {res}#                         {txt}Missing             {res}-
+{txt}{c +}{hline 22}{col 40}{hline 11}
+{res}1                                            3,206
+   (1 unique value)
+{txt}
+{com}. 
+. * 3. Modelo con un solo regresor
+. reg ins educyear
+
+{txt}      Source {c |}       SS           df       MS      Number of obs   ={res}     3,206
+{txt}{hline 13}{c +}{hline 34}   F(1, 3204)      = {res}   179.94
+{txt}       Model {c |} {res} 40.4465551         1  40.4465551   {txt}Prob > F        ={res}    0.0000
+{txt}    Residual {c |} {res} 720.178835     3,204  .224774917   {txt}R-squared       ={res}    0.0532
+{txt}{hline 13}{c +}{hline 34}   Adj R-squared   ={res}    0.0529
+{txt}       Total {c |} {res}  760.62539     3,205  .237324615   {txt}Root MSE        =   {res}  .4741
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      t{col 46}   P>|t|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} .0339943{col 26}{space 2} .0025342{col 37}{space 1}   13.41{col 46}{space 3}0.000{col 54}{space 4} .0290255{col 67}{space 3} .0389631
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-.0173991{col 26}{space 2} .0312944{col 37}{space 1}   -0.56{col 46}{space 3}0.578{col 54}{space 4}-.0787581{col 67}{space 3}   .04396
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. margins, at(educyear = 11.89863) dydx(educyear)
+{res}
+{txt}{col 1}Conditional marginal effects{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:3,206}
+{txt}{col 1}Model VCE: {res:OLS}
+
+{txt}{p2colset 1 13 13 2}{...}
+{p2col:Expression:}{res:Linear prediction, predict()}{p_end}
+{p2col:dy/dx wrt:}{res:educyear}{p_end}
+{p2colreset}{...}
+{lalign 4:At: }{space 0}{lalign 8:educyear} = {res:{ralign 8:11.89863}}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26} Delta-method
+{col 14}{c |}      dy/dx{col 26}   std. err.{col 38}      t{col 46}   P>|t|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} .0339943{col 26}{space 2} .0025342{col 37}{space 1}   13.41{col 46}{space 3}0.000{col 54}{space 4} .0290255{col 67}{space 3} .0389631
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. reg ins educyear, vce(robust)
+
+{txt}Linear regression                               Number of obs     = {res}     3,206
+                                                {txt}F(1, 3204)        =  {res}   239.03
+                                                {txt}Prob > F          = {res}    0.0000
+                                                {txt}R-squared         = {res}    0.0532
+                                                {txt}Root MSE          =    {res}  .4741
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26}    Robust
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  std. err.{col 38}      t{col 46}   P>|t|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} .0339943{col 26}{space 2} .0021988{col 37}{space 1}   15.46{col 46}{space 3}0.000{col 54}{space 4} .0296832{col 67}{space 3} .0383055
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-.0173991{col 26}{space 2} .0259848{col 37}{space 1}   -0.67{col 46}{space 3}0.503{col 54}{space 4}-.0683475{col 67}{space 3} .0335494
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. margins, at(educyear = 11.89863)
+{res}
+{txt}{col 1}Adjusted predictions{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:3,206}
+{txt}{col 1}Model VCE: {res:Robust}
+
+{txt}{p2colset 1 13 13 2}{...}
+{p2col:Expression:}{res:Linear prediction, predict()}{p_end}
+{p2colreset}{...}
+{lalign 4:At: }{space 0}{lalign 8:educyear} = {res:{ralign 8:11.89863}}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26} Delta-method
+{col 14}{c |}     Margin{col 26}   std. err.{col 38}      t{col 46}   P>|t|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_cons {c |}{col 14}{res}{space 2} .3870868{col 26}{space 2} .0083732{col 37}{space 1}   46.23{col 46}{space 3}0.000{col 54}{space 4} .3706694{col 67}{space 3} .4035042
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. 
+. logistic ins educyear
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:LR chi2({res:1})}{col 70} = {res}{ralign 6:181.52}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-2049.0129}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0424}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}         ins{col 14}{c |} Odds ratio{col 26}   Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} 1.173827{col 26}{space 2} .0148519{col 37}{space 1}   12.67{col 46}{space 3}0.000{col 54}{space 4} 1.145076{col 67}{space 3}   1.2033
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} .0905526{col 26}{space 2} .0145318{col 37}{space 1}  -14.97{col 46}{space 3}0.000{col 54}{space 4} .0661152{col 67}{space 3} .1240227
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{p 0 6 2}Note: {bf:_cons} estimates baseline odds{txt}.{p_end}
+
+{com}. margins, at(educyear = 11.89863) dydx(educyear)
+{res}
+{txt}{col 1}Conditional marginal effects{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:3,206}
+{txt}{col 1}Model VCE: {res:OIM}
+
+{txt}{p2colset 1 13 13 2}{...}
+{p2col:Expression:}{res:Pr(ins), predict()}{p_end}
+{p2col:dy/dx wrt:}{res:educyear}{p_end}
+{p2colreset}{...}
+{lalign 4:At: }{space 0}{lalign 8:educyear} = {res:{ralign 8:11.89863}}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26} Delta-method
+{col 14}{c |}      dy/dx{col 26}   std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} .0377113{col 26}{space 2} .0029463{col 37}{space 1}   12.80{col 46}{space 3}0.000{col 54}{space 4} .0319368{col 67}{space 3} .0434859
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. logistic ins educyear, vce(robust)
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:Wald chi2({res:1})}{col 70} = {res}{ralign 6:174.14}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 20:Log pseudolikelihood}{col 21} = {res}{ralign 10:-2049.0129}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0424}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26}    Robust
+{col 1}         ins{col 14}{c |} Odds ratio{col 26}   std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} 1.173827{col 26}{space 2} .0142564{col 37}{space 1}   13.20{col 46}{space 3}0.000{col 54}{space 4} 1.146215{col 67}{space 3} 1.202104
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} .0905526{col 26}{space 2} .0138889{col 37}{space 1}  -15.66{col 46}{space 3}0.000{col 54}{space 4} .0670416{col 67}{space 3} .1223089
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{p 0 6 2}Note: {bf:_cons} estimates baseline odds{txt}.{p_end}
+
+{com}. margins, at(educyear = 11.89863) dydx(educyear)
+{res}
+{txt}{col 1}Conditional marginal effects{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:3,206}
+{txt}{col 1}Model VCE: {res:Robust}
+
+{txt}{p2colset 1 13 13 2}{...}
+{p2col:Expression:}{res:Pr(ins), predict()}{p_end}
+{p2col:dy/dx wrt:}{res:educyear}{p_end}
+{p2colreset}{...}
+{lalign 4:At: }{space 0}{lalign 8:educyear} = {res:{ralign 8:11.89863}}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26} Delta-method
+{col 14}{c |}      dy/dx{col 26}   std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} .0377113{col 26}{space 2} .0028394{col 37}{space 1}   13.28{col 46}{space 3}0.000{col 54}{space 4} .0321462{col 67}{space 3} .0432764
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. 
+. probit ins educyear
+
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-2139.7712}  
+Iteration 1:{space 2}Log likelihood = {res:-2048.4138}  
+Iteration 2:{space 2}Log likelihood = {res:-2048.1889}  
+Iteration 3:{space 2}Log likelihood = {res:-2048.1889}  
+{res}
+{txt}{col 1}Probit regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:LR chi2({res:1})}{col 70} = {res}{ralign 6:183.16}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-2048.1889}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0428}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} .0985641{col 26}{space 2} .0075557{col 37}{space 1}   13.04{col 46}{space 3}0.000{col 54}{space 4} .0837551{col 67}{space 3} .1133731
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} -1.47841{col 26}{space 2} .0950511{col 37}{space 1}  -15.55{col 46}{space 3}0.000{col 54}{space 4}-1.664707{col 67}{space 3}-1.292114
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. margins, at(educyear = 11.89863) dydx(educyear)
+{res}
+{txt}{col 1}Conditional marginal effects{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:3,206}
+{txt}{col 1}Model VCE: {res:OIM}
+
+{txt}{p2colset 1 13 13 2}{...}
+{p2col:Expression:}{res:Pr(ins), predict()}{p_end}
+{p2col:dy/dx wrt:}{res:educyear}{p_end}
+{p2colreset}{...}
+{lalign 4:At: }{space 0}{lalign 8:educyear} = {res:{ralign 8:11.89863}}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26} Delta-method
+{col 14}{c |}      dy/dx{col 26}   std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} .0375271{col 26}{space 2} .0028618{col 37}{space 1}   13.11{col 46}{space 3}0.000{col 54}{space 4}  .031918{col 67}{space 3} .0431362
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. probit ins educyear, vce(robust)
+
+{res}{txt}Iteration 0:{space 2}Log pseudolikelihood = {res:-2139.7712}  
+Iteration 1:{space 2}Log pseudolikelihood = {res:-2048.4138}  
+Iteration 2:{space 2}Log pseudolikelihood = {res:-2048.1889}  
+Iteration 3:{space 2}Log pseudolikelihood = {res:-2048.1889}  
+{res}
+{txt}{col 1}Probit regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:Wald chi2({res:1})}{col 70} = {res}{ralign 6:182.63}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 20:Log pseudolikelihood}{col 21} = {res}{ralign 10:-2048.1889}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0428}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26}    Robust
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} .0985641{col 26}{space 2} .0072934{col 37}{space 1}   13.51{col 46}{space 3}0.000{col 54}{space 4} .0842694{col 67}{space 3} .1128588
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} -1.47841{col 26}{space 2} .0914012{col 37}{space 1}  -16.17{col 46}{space 3}0.000{col 54}{space 4}-1.657553{col 67}{space 3}-1.299267
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. margins, at(educyear = 11.89863) dydx(educyear)
+{res}
+{txt}{col 1}Conditional marginal effects{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:3,206}
+{txt}{col 1}Model VCE: {res:Robust}
+
+{txt}{p2colset 1 13 13 2}{...}
+{p2col:Expression:}{res:Pr(ins), predict()}{p_end}
+{p2col:dy/dx wrt:}{res:educyear}{p_end}
+{p2colreset}{...}
+{lalign 4:At: }{space 0}{lalign 8:educyear} = {res:{ralign 8:11.89863}}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26} Delta-method
+{col 14}{c |}      dy/dx{col 26}   std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 4}educyear {c |}{col 14}{res}{space 2} .0375271{col 26}{space 2} .0027697{col 37}{space 1}   13.55{col 46}{space 3}0.000{col 54}{space 4} .0320985{col 67}{space 3} .0429556
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. 
+. // Los coeficientes que tienen una interpretacion en terminos de  cambio en probabilidad solo son los estimados en OLS. En OLS,  los coeficientes no cambian al modificar el calculo de los errores estandar. En particular, obtiene que un anio adicional de educacion esta asociado con 3.4 puntos porcentuales adicionales de probabilidad de contar con seguro. Notar que los errores robustos son un poco mas chicos. Los coeficientes _crudos_ de los modelos no lineales no son comparables con los coeficientes OLS.
+. 
+. // En Logit y en Probit, los errores robustos tambien son un poco mas chicos que los homocedasticos.
+. 
+. // Lo que si podemos comparar entre metodos es el cambio marginal en probabilidad para la observacion promedio. OLS encontro que la persona con educacion promedio se beneficiara de un anio adicional de educacion en 3.4 puntos porcentuales en la probabilidad de contar con seguro privado, y ese cambio es estadisticamente distinto de cero con ambos tipos de errores estandar. Logit encontro un cambio marginal de 3.7 puntos porcentuales con significancia estadistica con ambos errores. Probit encontro el mismo cambio marginal que Logit y con significancia estadistica con ambos errores.
+. 
+. // El modelo con mejor ajuste es OLS con un R^2 de 0.053. Logit y Probit tienen ajustes muy similares, en 0.042.
+. 
+. * 4. Modelo con varios regresores
+. reg ins retire $xlist
+
+{txt}      Source {c |}       SS           df       MS      Number of obs   ={res}     3,206
+{txt}{hline 13}{c +}{hline 34}   F(7, 3198)      = {res}    41.14
+{txt}       Model {c |} {res} 62.8403396         7  8.97719137   {txt}Prob > F        ={res}    0.0000
+{txt}    Residual {c |} {res}  697.78505     3,198    .2181942   {txt}R-squared       ={res}    0.0826
+{txt}{hline 13}{c +}{hline 34}   Adj R-squared   ={res}    0.0806
+{txt}       Total {c |} {res}  760.62539     3,205  .237324615   {txt}Root MSE        =   {res} .46711
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      t{col 46}   P>|t|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}retire {c |}{col 14}{res}{space 2} .0408508{col 26}{space 2} .0182197{col 37}{space 1}    2.24{col 46}{space 3}0.025{col 54}{space 4} .0051273{col 67}{space 3} .0765743
+{txt}{space 9}age {c |}{col 14}{res}{space 2}-.0028955{col 26}{space 2} .0024189{col 37}{space 1}   -1.20{col 46}{space 3}0.231{col 54}{space 4}-.0076383{col 67}{space 3} .0018473
+{txt}{space 4}hstatusg {c |}{col 14}{res}{space 2} .0655583{col 26}{space 2} .0194531{col 37}{space 1}    3.37{col 46}{space 3}0.001{col 54}{space 4} .0274166{col 67}{space 3} .1037001
+{txt}{space 4}hhincome {c |}{col 14}{res}{space 2} .0004921{col 26}{space 2} .0001375{col 37}{space 1}    3.58{col 46}{space 3}0.000{col 54}{space 4} .0002225{col 67}{space 3} .0007617
+{txt}{space 4}educyear {c |}{col 14}{res}{space 2} .0233686{col 26}{space 2} .0028672{col 37}{space 1}    8.15{col 46}{space 3}0.000{col 54}{space 4}  .017747{col 67}{space 3} .0289903
+{txt}{space 5}married {c |}{col 14}{res}{space 2} .1234699{col 26}{space 2} .0193618{col 37}{space 1}    6.38{col 46}{space 3}0.000{col 54}{space 4} .0855071{col 67}{space 3} .1614326
+{txt}{space 8}hisp {c |}{col 14}{res}{space 2}-.1210059{col 26}{space 2}  .033666{col 37}{space 1}   -3.59{col 46}{space 3}0.000{col 54}{space 4} -.187015{col 67}{space 3}-.0549969
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} .1270857{col 26}{space 2} .1605628{col 37}{space 1}    0.79{col 46}{space 3}0.429{col 54}{space 4}-.1877308{col 67}{space 3} .4419021
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. estimates store ols
+{txt}
+{com}. reg ins retire $xlist, vce(robust)
+
+{txt}Linear regression                               Number of obs     = {res}     3,206
+                                                {txt}F(7, 3198)        =  {res}    58.98
+                                                {txt}Prob > F          = {res}    0.0000
+                                                {txt}R-squared         = {res}    0.0826
+                                                {txt}Root MSE          =    {res} .46711
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26}    Robust
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  std. err.{col 38}      t{col 46}   P>|t|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}retire {c |}{col 14}{res}{space 2} .0408508{col 26}{space 2} .0182217{col 37}{space 1}    2.24{col 46}{space 3}0.025{col 54}{space 4} .0051234{col 67}{space 3} .0765782
+{txt}{space 9}age {c |}{col 14}{res}{space 2}-.0028955{col 26}{space 2} .0023254{col 37}{space 1}   -1.25{col 46}{space 3}0.213{col 54}{space 4}-.0074549{col 67}{space 3} .0016638
+{txt}{space 4}hstatusg {c |}{col 14}{res}{space 2} .0655583{col 26}{space 2} .0190126{col 37}{space 1}    3.45{col 46}{space 3}0.001{col 54}{space 4} .0282801{col 67}{space 3} .1028365
+{txt}{space 4}hhincome {c |}{col 14}{res}{space 2} .0004921{col 26}{space 2} .0001874{col 37}{space 1}    2.63{col 46}{space 3}0.009{col 54}{space 4} .0001247{col 67}{space 3} .0008595
+{txt}{space 4}educyear {c |}{col 14}{res}{space 2} .0233686{col 26}{space 2} .0027081{col 37}{space 1}    8.63{col 46}{space 3}0.000{col 54}{space 4} .0180589{col 67}{space 3} .0286784
+{txt}{space 5}married {c |}{col 14}{res}{space 2} .1234699{col 26}{space 2} .0186521{col 37}{space 1}    6.62{col 46}{space 3}0.000{col 54}{space 4} .0868987{col 67}{space 3} .1600411
+{txt}{space 8}hisp {c |}{col 14}{res}{space 2}-.1210059{col 26}{space 2} .0269459{col 37}{space 1}   -4.49{col 46}{space 3}0.000{col 54}{space 4}-.1738389{col 67}{space 3} -.068173
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} .1270857{col 26}{space 2} .1538816{col 37}{space 1}    0.83{col 46}{space 3}0.409{col 54}{space 4}-.1746309{col 67}{space 3} .4288023
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. estimates store ols_robust
+{txt}
+{com}. 
+. logit ins retire $xlist
+
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-2139.7712}  
+Iteration 1:{space 2}Log likelihood = {res:-1996.7434}  
+Iteration 2:{space 2}Log likelihood = {res:-1994.8864}  
+Iteration 3:{space 2}Log likelihood = {res:-1994.8784}  
+Iteration 4:{space 2}Log likelihood = {res:-1994.8784}  
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:LR chi2({res:7})}{col 70} = {res}{ralign 6:289.79}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-1994.8784}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0677}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}retire {c |}{col 14}{res}{space 2} .1969297{col 26}{space 2} .0842067{col 37}{space 1}    2.34{col 46}{space 3}0.019{col 54}{space 4} .0318875{col 67}{space 3} .3619718
+{txt}{space 9}age {c |}{col 14}{res}{space 2}-.0145955{col 26}{space 2} .0112871{col 37}{space 1}   -1.29{col 46}{space 3}0.196{col 54}{space 4}-.0367178{col 67}{space 3} .0075267
+{txt}{space 4}hstatusg {c |}{col 14}{res}{space 2} .3122654{col 26}{space 2} .0916739{col 37}{space 1}    3.41{col 46}{space 3}0.001{col 54}{space 4} .1325878{col 67}{space 3}  .491943
+{txt}{space 4}hhincome {c |}{col 14}{res}{space 2} .0023036{col 26}{space 2}  .000762{col 37}{space 1}    3.02{col 46}{space 3}0.003{col 54}{space 4}   .00081{col 67}{space 3} .0037972
+{txt}{space 4}educyear {c |}{col 14}{res}{space 2} .1142626{col 26}{space 2} .0142012{col 37}{space 1}    8.05{col 46}{space 3}0.000{col 54}{space 4} .0864288{col 67}{space 3} .1420963
+{txt}{space 5}married {c |}{col 14}{res}{space 2}  .578636{col 26}{space 2} .0933198{col 37}{space 1}    6.20{col 46}{space 3}0.000{col 54}{space 4} .3957327{col 67}{space 3} .7615394
+{txt}{space 8}hisp {c |}{col 14}{res}{space 2}-.8103059{col 26}{space 2} .1957522{col 37}{space 1}   -4.14{col 46}{space 3}0.000{col 54}{space 4}-1.193973{col 67}{space 3}-.4266387
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-1.715578{col 26}{space 2} .7486219{col 37}{space 1}   -2.29{col 46}{space 3}0.022{col 54}{space 4} -3.18285{col 67}{space 3}-.2483064
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. estimates store logit
+{txt}
+{com}. logit ins retire $xlist, vce(robust)
+
+{res}{txt}Iteration 0:{space 2}Log pseudolikelihood = {res:-2139.7712}  
+Iteration 1:{space 2}Log pseudolikelihood = {res:-1996.7434}  
+Iteration 2:{space 2}Log pseudolikelihood = {res:-1994.8864}  
+Iteration 3:{space 2}Log pseudolikelihood = {res:-1994.8784}  
+Iteration 4:{space 2}Log pseudolikelihood = {res:-1994.8784}  
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:Wald chi2({res:7})}{col 70} = {res}{ralign 6:256.49}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 20:Log pseudolikelihood}{col 21} = {res}{ralign 10:-1994.8784}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0677}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26}    Robust
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}retire {c |}{col 14}{res}{space 2} .1969297{col 26}{space 2} .0849524{col 37}{space 1}    2.32{col 46}{space 3}0.020{col 54}{space 4} .0304261{col 67}{space 3} .3634332
+{txt}{space 9}age {c |}{col 14}{res}{space 2}-.0145955{col 26}{space 2} .0110189{col 37}{space 1}   -1.32{col 46}{space 3}0.185{col 54}{space 4}-.0361921{col 67}{space 3}  .007001
+{txt}{space 4}hstatusg {c |}{col 14}{res}{space 2} .3122654{col 26}{space 2} .0918378{col 37}{space 1}    3.40{col 46}{space 3}0.001{col 54}{space 4} .1322667{col 67}{space 3} .4922641
+{txt}{space 4}hhincome {c |}{col 14}{res}{space 2} .0023036{col 26}{space 2} .0011485{col 37}{space 1}    2.01{col 46}{space 3}0.045{col 54}{space 4} .0000526{col 67}{space 3} .0045546
+{txt}{space 4}educyear {c |}{col 14}{res}{space 2} .1142626{col 26}{space 2} .0143616{col 37}{space 1}    7.96{col 46}{space 3}0.000{col 54}{space 4} .0861143{col 67}{space 3} .1424108
+{txt}{space 5}married {c |}{col 14}{res}{space 2}  .578636{col 26}{space 2} .0941579{col 37}{space 1}    6.15{col 46}{space 3}0.000{col 54}{space 4}   .39409{col 67}{space 3} .7631821
+{txt}{space 8}hisp {c |}{col 14}{res}{space 2}-.8103059{col 26}{space 2} .1936793{col 37}{space 1}   -4.18{col 46}{space 3}0.000{col 54}{space 4} -1.18991{col 67}{space 3}-.4307016
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-1.715578{col 26}{space 2} .7279873{col 37}{space 1}   -2.36{col 46}{space 3}0.018{col 54}{space 4}-3.142407{col 67}{space 3}-.2887495
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. estimates store logit_robust
+{txt}
+{com}. 
+. 
+. 
+. probit ins retire $xlist
+
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-2139.7712}  
+Iteration 1:{space 2}Log likelihood = {res:-1994.4552}  
+Iteration 2:{space 2}Log likelihood = {res: -1993.624}  
+Iteration 3:{space 2}Log likelihood = {res:-1993.6237}  
+Iteration 4:{space 2}Log likelihood = {res:-1993.6237}  
+{res}
+{txt}{col 1}Probit regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:LR chi2({res:7})}{col 70} = {res}{ralign 6:292.30}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-1993.6237}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0683}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}retire {c |}{col 14}{res}{space 2} .1183567{col 26}{space 2} .0512678{col 37}{space 1}    2.31{col 46}{space 3}0.021{col 54}{space 4} .0178736{col 67}{space 3} .2188397
+{txt}{space 9}age {c |}{col 14}{res}{space 2}-.0088696{col 26}{space 2}  .006899{col 37}{space 1}   -1.29{col 46}{space 3}0.199{col 54}{space 4}-.0223914{col 67}{space 3} .0046521
+{txt}{space 4}hstatusg {c |}{col 14}{res}{space 2} .1977357{col 26}{space 2} .0554868{col 37}{space 1}    3.56{col 46}{space 3}0.000{col 54}{space 4} .0889835{col 67}{space 3} .3064878
+{txt}{space 4}hhincome {c |}{col 14}{res}{space 2}  .001233{col 26}{space 2} .0003866{col 37}{space 1}    3.19{col 46}{space 3}0.001{col 54}{space 4} .0004754{col 67}{space 3} .0019907
+{txt}{space 4}educyear {c |}{col 14}{res}{space 2} .0707477{col 26}{space 2} .0084782{col 37}{space 1}    8.34{col 46}{space 3}0.000{col 54}{space 4} .0541308{col 67}{space 3} .0873647
+{txt}{space 5}married {c |}{col 14}{res}{space 2}  .362329{col 26}{space 2} .0560031{col 37}{space 1}    6.47{col 46}{space 3}0.000{col 54}{space 4}  .252565{col 67}{space 3} .4720931
+{txt}{space 8}hisp {c |}{col 14}{res}{space 2}-.4731099{col 26}{space 2} .1104393{col 37}{space 1}   -4.28{col 46}{space 3}0.000{col 54}{space 4} -.689567{col 67}{space 3}-.2566529
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-1.069319{col 26}{space 2} .4580794{col 37}{space 1}   -2.33{col 46}{space 3}0.020{col 54}{space 4}-1.967139{col 67}{space 3}-.1715002
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. estimates store probit
+{txt}
+{com}. probit ins retire $xlist, vce(robust)   
+
+{res}{txt}Iteration 0:{space 2}Log pseudolikelihood = {res:-2139.7712}  
+Iteration 1:{space 2}Log pseudolikelihood = {res:-1994.4552}  
+Iteration 2:{space 2}Log pseudolikelihood = {res: -1993.624}  
+Iteration 3:{space 2}Log pseudolikelihood = {res:-1993.6237}  
+Iteration 4:{space 2}Log pseudolikelihood = {res:-1993.6237}  
+{res}
+{txt}{col 1}Probit regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:Wald chi2({res:7})}{col 70} = {res}{ralign 6:276.45}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 20:Log pseudolikelihood}{col 21} = {res}{ralign 10:-1993.6237}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0683}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26}    Robust
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}retire {c |}{col 14}{res}{space 2} .1183567{col 26}{space 2} .0514939{col 37}{space 1}    2.30{col 46}{space 3}0.022{col 54}{space 4} .0174304{col 67}{space 3} .2192829
+{txt}{space 9}age {c |}{col 14}{res}{space 2}-.0088696{col 26}{space 2} .0067402{col 37}{space 1}   -1.32{col 46}{space 3}0.188{col 54}{space 4}-.0220801{col 67}{space 3} .0043409
+{txt}{space 4}hstatusg {c |}{col 14}{res}{space 2} .1977357{col 26}{space 2}  .055397{col 37}{space 1}    3.57{col 46}{space 3}0.000{col 54}{space 4} .0891595{col 67}{space 3} .3063118
+{txt}{space 4}hhincome {c |}{col 14}{res}{space 2}  .001233{col 26}{space 2} .0005574{col 37}{space 1}    2.21{col 46}{space 3}0.027{col 54}{space 4} .0001405{col 67}{space 3} .0023256
+{txt}{space 4}educyear {c |}{col 14}{res}{space 2} .0707477{col 26}{space 2} .0084932{col 37}{space 1}    8.33{col 46}{space 3}0.000{col 54}{space 4} .0541013{col 67}{space 3} .0873942
+{txt}{space 5}married {c |}{col 14}{res}{space 2}  .362329{col 26}{space 2} .0560611{col 37}{space 1}    6.46{col 46}{space 3}0.000{col 54}{space 4} .2524514{col 67}{space 3} .4722067
+{txt}{space 8}hisp {c |}{col 14}{res}{space 2}-.4731099{col 26}{space 2} .1086273{col 37}{space 1}   -4.36{col 46}{space 3}0.000{col 54}{space 4}-.6860156{col 67}{space 3}-.2602043
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-1.069319{col 26}{space 2} .4460128{col 37}{space 1}   -2.40{col 46}{space 3}0.017{col 54}{space 4}-1.943488{col 67}{space 3}-.1951505
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. estimates store probit_robust
+{txt}
+{com}. 
+. 
+. estimates table ols ols_robust logit logit_robust probit probit_robust, se
+{res}
+{txt}{hline 12}{c -}{c TT}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}
+{ralign 12:Variable} {c |} {center 10:ols} {space 1} {center 10:ols_robust} {space 1} {center 10:logit} {space 1} {center 10:logit_ro~t} {space 1} {center 10:probit} {space 1} {center 10:probit_r~t} {space 1}
+{hline 12}{c -}{c +}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}
+{res}{txt}{res}_            {txt}{c |}{res}
+{txt}{space 6}retire {c |}{res} {ralign 10:.04085082}{txt} {space 1}{res} {ralign 10:.04085082}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:.01821972}{txt} {space 1}{res} {ralign 10:.0182217}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 9}age {c |}{res} {ralign 10:-.00289555}{txt} {space 1}{res} {ralign 10:-.00289555}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:.00241892}{txt} {space 1}{res} {ralign 10:.00232538}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 4}hstatusg {c |}{res} {ralign 10:.06555834}{txt} {space 1}{res} {ralign 10:.06555834}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:.01945306}{txt} {space 1}{res} {ralign 10:.01901264}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 4}hhincome {c |}{res} {ralign 10:.00049209}{txt} {space 1}{res} {ralign 10:.00049209}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:.00013751}{txt} {space 1}{res} {ralign 10:.00018739}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 4}educyear {c |}{res} {ralign 10:.02336863}{txt} {space 1}{res} {ralign 10:.02336863}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:.00286717}{txt} {space 1}{res} {ralign 10:.00270808}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 5}married {c |}{res} {ralign 10:.12346988}{txt} {space 1}{res} {ralign 10:.12346988}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:.01936178}{txt} {space 1}{res} {ralign 10:.01865206}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 8}hisp {c |}{res} {ralign 10:-.12100593}{txt} {space 1}{res} {ralign 10:-.12100593}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:.03366597}{txt} {space 1}{res} {ralign 10:.0269459}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 7}_cons {c |}{res} {ralign 10:.1270857}{txt} {space 1}{res} {ralign 10:.1270857}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:.1605628}{txt} {space 1}{res} {ralign 10:.1538816}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}
+{res}{txt}{hline 12}{c -}{c +}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}
+{res}{txt}{res}ins          {txt}{c |}{res}
+{txt}{space 6}retire {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.19692966}{txt} {space 1}{res} {ralign 10:.19692966}{txt} {space 1}{res} {ralign 10:.11835665}{txt} {space 1}{res} {ralign 10:.11835665}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.08420674}{txt} {space 1}{res} {ralign 10:.08495237}{txt} {space 1}{res} {ralign 10:.05126779}{txt} {space 1}{res} {ralign 10:.05149394}{txt} {space 1}
+{res}{txt}{space 9}age {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:-.01459553}{txt} {space 1}{res} {ralign 10:-.01459553}{txt} {space 1}{res} {ralign 10:-.00886962}{txt} {space 1}{res} {ralign 10:-.00886962}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.01128707}{txt} {space 1}{res} {ralign 10:.01101885}{txt} {space 1}{res} {ralign 10:.00689899}{txt} {space 1}{res} {ralign 10:.00674018}{txt} {space 1}
+{res}{txt}{space 4}hstatusg {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.31226537}{txt} {space 1}{res} {ralign 10:.31226537}{txt} {space 1}{res} {ralign 10:.19773566}{txt} {space 1}{res} {ralign 10:.19773566}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.09167392}{txt} {space 1}{res} {ralign 10:.09183777}{txt} {space 1}{res} {ralign 10:.05548682}{txt} {space 1}{res} {ralign 10:.05539699}{txt} {space 1}
+{res}{txt}{space 4}hhincome {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.0023036}{txt} {space 1}{res} {ralign 10:.0023036}{txt} {space 1}{res} {ralign 10:.00123304}{txt} {space 1}{res} {ralign 10:.00123304}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.00076204}{txt} {space 1}{res} {ralign 10:.00114848}{txt} {space 1}{res} {ralign 10:.00038655}{txt} {space 1}{res} {ralign 10:.00055744}{txt} {space 1}
+{res}{txt}{space 4}educyear {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.11426256}{txt} {space 1}{res} {ralign 10:.11426256}{txt} {space 1}{res} {ralign 10:.07074775}{txt} {space 1}{res} {ralign 10:.07074775}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.01420115}{txt} {space 1}{res} {ralign 10:.01436161}{txt} {space 1}{res} {ralign 10:.00847818}{txt} {space 1}{res} {ralign 10:.00849323}{txt} {space 1}
+{res}{txt}{space 5}married {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.57863605}{txt} {space 1}{res} {ralign 10:.57863605}{txt} {space 1}{res} {ralign 10:.36232905}{txt} {space 1}{res} {ralign 10:.36232905}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.09331976}{txt} {space 1}{res} {ralign 10:.0941579}{txt} {space 1}{res} {ralign 10:.0560031}{txt} {space 1}{res} {ralign 10:.05606107}{txt} {space 1}
+{res}{txt}{space 8}hisp {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:-.81030593}{txt} {space 1}{res} {ralign 10:-.81030593}{txt} {space 1}{res} {ralign 10:-.47310993}{txt} {space 1}{res} {ralign 10:-.47310993}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.19575217}{txt} {space 1}{res} {ralign 10:.19367926}{txt} {space 1}{res} {ralign 10:.11043931}{txt} {space 1}{res} {ralign 10:.10862733}{txt} {space 1}
+{res}{txt}{space 7}_cons {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:-1.7155784}{txt} {space 1}{res} {ralign 10:-1.7155784}{txt} {space 1}{res} {ralign 10:-1.0693194}{txt} {space 1}{res} {ralign 10:-1.0693194}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:}{txt} {space 1}{res} {ralign 10:.74862194}{txt} {space 1}{res} {ralign 10:.72798734}{txt} {space 1}{res} {ralign 10:.45807945}{txt} {space 1}{res} {ralign 10:.44601276}{txt} {space 1}
+{res}{txt}{hline 12}{c -}{c BT}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}
+{ralign 92:Legend: b/se}
+{res}{txt}
+{com}. 
+. // OLS encontro un coeficiente de 2.3 puntos porcentuales para educyear, el cual es bastante mas chico que en el ejercicio anterior. Puede ser que este cambio se deba a la incluison de variables previamente omitidas. De nuevo, los errores estandar robustos son un poco mas chicos que los homocedasticos y en ambas estimaciones, los coeficientes son estadisticamente distintos de cero.
+. 
+. // Tanto en Probit como en Logit todos los coeficientes para educyear son singificativos al 95% de confianza.
+. 
+. // El factor que mas influye en la probabilidad de contar con seguro es estar casado. Influye en 12.3 puntos porcentuales, todo lo demas constante. 
+. 
+. // En el modelo teorico de seleccion adversa, encontrariamos que las usuarias mas riesgosas son las que mas contratan seguro. Sin embargo, los modelos no encuentran esta relacion, porque encuentran que los mas educados (que son los mas saludables) cuentan con seguro en mayor proporcion. Sin embargo, preferimos el modelo con mas regresores porque captura varianza de otras variables importantes como el estado civil y el ingreso.
+. 
+. // En general si se cumple las reglas aproximadas
+. 
+. * 5. Pruebas de hipotesis
+. 
+. logit ins retire $xlist age2 agefem agechr agewhi chronic white
+
+{res}{txt}Iteration 0:{space 2}Log likelihood = {res:-2139.7712}  
+Iteration 1:{space 2}Log likelihood = {res:-1992.6005}  
+Iteration 2:{space 2}Log likelihood = {res:-1990.6715}  
+Iteration 3:{space 2}Log likelihood = {res:-1990.6633}  
+Iteration 4:{space 2}Log likelihood = {res:-1990.6633}  
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:LR chi2({res:13})}{col 70} = {res}{ralign 6:298.22}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 14:Log likelihood}{col 15} = {res}{ralign 10:-1990.6633}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0697}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}retire {c |}{col 14}{res}{space 2} .1567476{col 26}{space 2}  .086279{col 37}{space 1}    1.82{col 46}{space 3}0.069{col 54}{space 4}-.0123561{col 67}{space 3} .3258514
+{txt}{space 9}age {c |}{col 14}{res}{space 2} .3833513{col 26}{space 2}  .208494{col 37}{space 1}    1.84{col 46}{space 3}0.066{col 54}{space 4}-.0252894{col 67}{space 3}  .791992
+{txt}{space 4}hstatusg {c |}{col 14}{res}{space 2} .3446585{col 26}{space 2} .0999622{col 37}{space 1}    3.45{col 46}{space 3}0.001{col 54}{space 4} .1487361{col 67}{space 3} .5405808
+{txt}{space 4}hhincome {c |}{col 14}{res}{space 2} .0021736{col 26}{space 2} .0007612{col 37}{space 1}    2.86{col 46}{space 3}0.004{col 54}{space 4} .0006817{col 67}{space 3} .0036654
+{txt}{space 4}educyear {c |}{col 14}{res}{space 2} .1146283{col 26}{space 2} .0143582{col 37}{space 1}    7.98{col 46}{space 3}0.000{col 54}{space 4} .0864868{col 67}{space 3} .1427697
+{txt}{space 5}married {c |}{col 14}{res}{space 2}  .535054{col 26}{space 2} .0979513{col 37}{space 1}    5.46{col 46}{space 3}0.000{col 54}{space 4}  .343073{col 67}{space 3}  .727035
+{txt}{space 8}hisp {c |}{col 14}{res}{space 2}-.8004466{col 26}{space 2} .1965478{col 37}{space 1}   -4.07{col 46}{space 3}0.000{col 54}{space 4}-1.185673{col 67}{space 3}  -.41522
+{txt}{space 8}age2 {c |}{col 14}{res}{space 2}-.0028234{col 26}{space 2}  .001511{col 37}{space 1}   -1.87{col 46}{space 3}0.062{col 54}{space 4}-.0057849{col 67}{space 3} .0001381
+{txt}{space 6}agefem {c |}{col 14}{res}{space 2}-.0022649{col 26}{space 2} .0012594{col 37}{space 1}   -1.80{col 46}{space 3}0.072{col 54}{space 4}-.0047333{col 67}{space 3} .0002035
+{txt}{space 6}agechr {c |}{col 14}{res}{space 2}-.0062876{col 26}{space 2} .0076007{col 37}{space 1}   -0.83{col 46}{space 3}0.408{col 54}{space 4}-.0211847{col 67}{space 3} .0086095
+{txt}{space 6}agewhi {c |}{col 14}{res}{space 2}-.0060242{col 26}{space 2} .0272275{col 37}{space 1}   -0.22{col 46}{space 3}0.825{col 54}{space 4}-.0593891{col 67}{space 3} .0473406
+{txt}{space 5}chronic {c |}{col 14}{res}{space 2}  .463898{col 26}{space 2} .5080352{col 37}{space 1}    0.91{col 46}{space 3}0.361{col 54}{space 4}-.5318326{col 67}{space 3} 1.459629
+{txt}{space 7}white {c |}{col 14}{res}{space 2} .4572036{col 26}{space 2} 1.810974{col 37}{space 1}    0.25{col 46}{space 3}0.801{col 54}{space 4} -3.09224{col 67}{space 3} 4.006647
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2} -15.6952{col 26}{space 2} 7.304876{col 37}{space 1}   -2.15{col 46}{space 3}0.032{col 54}{space 4} -30.0125{col 67}{space 3}-1.377907
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. testparm age2 agefem agechr agewhi chronic white
+
+{p 0 7}{space 1}{text:( 1)}{space 1} {res}[ins]age2 = 0{p_end}
+{p 0 7}{space 1}{text:( 2)}{space 1} [ins]agefem = 0{p_end}
+{p 0 7}{space 1}{text:( 3)}{space 1} [ins]agechr = 0{p_end}
+{p 0 7}{space 1}{text:( 4)}{space 1} [ins]agewhi = 0{p_end}
+{p 0 7}{space 1}{text:( 5)}{space 1} [ins]chronic = 0{p_end}
+{p 0 7}{space 1}{text:( 6)}{space 1} [ins]white = 0{p_end}
+
+{txt}{col 12}chi2(  6) ={res}    8.26
+{txt}{col 10}Prob > chi2 =  {res}  0.2196
+{txt}
+{com}. 
+. // No se puede rechazar la hipótesis nula de que los coeficientes para age2 agefem agechr agewhi chronic white sean cero. Por lo tanto, no es necesario incluir estos efectos de interacción. 
+. 
+. * 6. Selección del modelo
+. 
+. estimates table logit_robust probit_robust, p stats(N aic bic ll p r2_p)
+{res}
+{txt}{hline 12}{c -}{c TT}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}
+{ralign 12:Variable} {c |} {center 10:logit_ro~t} {space 1} {center 10:probit_r~t} {space 1}
+{hline 12}{c -}{c +}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}
+{res}{txt}{space 6}retire {c |}{res} {ralign 10:.19692966}{txt} {space 1}{res} {ralign 10:.11835665}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:0.0204}{txt} {space 1}{res} {ralign 10:0.0215}{txt} {space 1}
+{res}{txt}{space 9}age {c |}{res} {ralign 10:-.01459553}{txt} {space 1}{res} {ralign 10:-.00886962}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:0.1853}{txt} {space 1}{res} {ralign 10:0.1882}{txt} {space 1}
+{res}{txt}{space 4}hstatusg {c |}{res} {ralign 10:.31226537}{txt} {space 1}{res} {ralign 10:.19773566}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:0.0007}{txt} {space 1}{res} {ralign 10:0.0004}{txt} {space 1}
+{res}{txt}{space 4}hhincome {c |}{res} {ralign 10:.0023036}{txt} {space 1}{res} {ralign 10:.00123304}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:0.0449}{txt} {space 1}{res} {ralign 10:0.0270}{txt} {space 1}
+{res}{txt}{space 4}educyear {c |}{res} {ralign 10:.11426256}{txt} {space 1}{res} {ralign 10:.07074775}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:0.0000}{txt} {space 1}{res} {ralign 10:0.0000}{txt} {space 1}
+{res}{txt}{space 5}married {c |}{res} {ralign 10:.57863605}{txt} {space 1}{res} {ralign 10:.36232905}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:0.0000}{txt} {space 1}{res} {ralign 10:0.0000}{txt} {space 1}
+{res}{txt}{space 8}hisp {c |}{res} {ralign 10:-.81030593}{txt} {space 1}{res} {ralign 10:-.47310993}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:0.0000}{txt} {space 1}{res} {ralign 10:0.0000}{txt} {space 1}
+{res}{txt}{space 7}_cons {c |}{res} {ralign 10:-1.7155784}{txt} {space 1}{res} {ralign 10:-1.0693194}{txt} {space 1}
+{res}{txt}{space 12} {c |}{res} {ralign 10:0.0184}{txt} {space 1}{res} {ralign 10:0.0165}{txt} {space 1}
+{res}{txt}{hline 12}{c -}{c +}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}
+{ralign 12:N} {c |}{res} {ralign 10:3206}{txt} {space 1}{res} {ralign 10:3206}{txt} {space 1}
+{res}{txt}{ralign 12:aic} {c |}{res} {ralign 10:4005.7568}{txt} {space 1}{res} {ralign 10:4003.2474}{txt} {space 1}
+{res}{txt}{ralign 12:bic} {c |}{res} {ralign 10:4054.3391}{txt} {space 1}{res} {ralign 10:4051.8296}{txt} {space 1}
+{res}{txt}{ralign 12:ll} {c |}{res} {ralign 10:-1994.8784}{txt} {space 1}{res} {ralign 10:-1993.6237}{txt} {space 1}
+{res}{txt}{ralign 12:p} {c |}{res} {ralign 10:1.149e-51}{txt} {space 1}{res} {ralign 10:6.413e-56}{txt} {space 1}
+{res}{txt}{ralign 12:r2_p} {c |}{res} {ralign 10:.06771416}{txt} {space 1}{res} {ralign 10:.06830054}{txt} {space 1}
+{res}{txt}{hline 12}{c -}{c BT}{c -}{hline 10}{c -}{c -}{c -}{hline 10}{c -}{c -}
+{ralign 40:Legend: b/p}
+{res}{txt}
+{com}. 
+. qui logit ins retire $xlist, vce(robust)
+{txt}
+{com}. estat gof 
+
+{txt}Goodness-of-fit test after logistic model
+Variable: {res}ins
+
+{txt}{ralign 28:Number of observations} = {res}{ralign 7:3,206}
+{txt}{ralign 28:Number of covariate patterns} = {res}{ralign 7:3,192}
+{txt}{ralign 28:Pearson chi2({res:3184})} = {res}{ralign 7:3167.06}
+{txt}{ralign 28:Prob > chi2} = {res}{ralign 7:0.5810}
+{txt}
+{com}. estat classification
+
+{txt}Logistic model for ins
+
+{col 15}{hline 8} True {hline 8}
+Classified {c |}{col 22}D{col 35}~D  {c |}{col 46}Total
+{hline 11}{c +}{hline 26}{c +}{hline 11}
+{col 6}+{col 12}{c |} {res}      345{col 28}      308{txt}  {c |}  {res}      653
+{txt}{col 6}-{col 12}{c |} {res}      896{col 28}     1657{txt}  {c |}  {res}     2553
+{txt}{hline 11}{c +}{hline 26}{c +}{hline 11}
+   Total   {c |} {res}     1241{col 28}     1965{txt}  {c |}  {res}     3206
+
+{txt}Classified + if predicted Pr(D) >= .5
+True D defined as ins != 0
+{hline 50}
+Sensitivity                     Pr( +| D){res}   27.80%
+{txt}Specificity                     Pr( -|~D){res}   84.33%
+{txt}Positive predictive value       Pr( D| +){res}   52.83%
+{txt}Negative predictive value       Pr(~D| -){res}   64.90%
+{txt}{hline 50}
+False + rate for true ~D        Pr( +|~D){res}   15.67%
+{txt}False - rate for true D         Pr( -| D){res}   72.20%
+{txt}False + rate for classified +   Pr(~D| +){res}   47.17%
+{txt}False - rate for classified -   Pr( D| -){res}   35.10%
+{txt}{hline 50}
+Correctly classified                     {res}   62.45%
+{txt}{hline 50}
+
+{com}. 
+. qui probit ins retire $xlist, vce(robust)
+{txt}
+{com}. estat gof 
+
+{txt}Goodness-of-fit test after probit model
+Variable: {res}ins
+
+{txt}{ralign 28:Number of observations} = {res}{ralign 7:3,206}
+{txt}{ralign 28:Number of covariate patterns} = {res}{ralign 7:3,192}
+{txt}{ralign 28:Pearson chi2({res:3184})} = {res}{ralign 7:3169.78}
+{txt}{ralign 28:Prob > chi2} = {res}{ralign 7:0.5675}
+{txt}
+{com}. estat classification
+
+{txt}Probit model for ins
+
+{col 15}{hline 8} True {hline 8}
+Classified {c |}{col 22}D{col 35}~D  {c |}{col 46}Total
+{hline 11}{c +}{hline 26}{c +}{hline 11}
+{col 6}+{col 12}{c |} {res}      335{col 28}      305{txt}  {c |}  {res}      640
+{txt}{col 6}-{col 12}{c |} {res}      906{col 28}     1660{txt}  {c |}  {res}     2566
+{txt}{hline 11}{c +}{hline 26}{c +}{hline 11}
+   Total   {c |} {res}     1241{col 28}     1965{txt}  {c |}  {res}     3206
+
+{txt}Classified + if predicted Pr(D) >= .5
+True D defined as ins != 0
+{hline 50}
+Sensitivity                     Pr( +| D){res}   26.99%
+{txt}Specificity                     Pr( -|~D){res}   84.48%
+{txt}Positive predictive value       Pr( D| +){res}   52.34%
+{txt}Negative predictive value       Pr(~D| -){res}   64.69%
+{txt}{hline 50}
+False + rate for true ~D        Pr( +|~D){res}   15.52%
+{txt}False - rate for true D         Pr( -| D){res}   73.01%
+{txt}False + rate for classified +   Pr(~D| +){res}   47.66%
+{txt}False - rate for classified -   Pr( D| -){res}   35.31%
+{txt}{hline 50}
+Correctly classified                     {res}   62.23%
+{txt}{hline 50}
+
+{com}. 
+. // Los modelos logit y probit con errores robustos generan estimaciones equivalentes en cunato a la significancia de los cooeficientes, criterios de información, valor de log-likelihood a pseudo R^2
+. 
+. // Como se puede ver en las pruebas de precicción de probabilidad de frecuencias y de probabilidad de valores reales, ambos modelos tienen rendimientos muy similares. Tienen ajustes muy similares. Elegiremos el logit porque sus coeficientes crudos tienen una interpretación más itnuitiva en cuanto al cambio porcentual en la razón de probabilidades.
+. 
+. * 7. Predicción de probabilidades
+. 
+. logit ins retire $xlist, vce(robust) 
+
+{res}{txt}Iteration 0:{space 2}Log pseudolikelihood = {res:-2139.7712}  
+Iteration 1:{space 2}Log pseudolikelihood = {res:-1996.7434}  
+Iteration 2:{space 2}Log pseudolikelihood = {res:-1994.8864}  
+Iteration 3:{space 2}Log pseudolikelihood = {res:-1994.8784}  
+Iteration 4:{space 2}Log pseudolikelihood = {res:-1994.8784}  
+{res}
+{txt}{col 1}Logistic regression{col 57}{lalign 13:Number of obs}{col 70} = {res}{ralign 6:3,206}
+{txt}{col 57}{lalign 13:Wald chi2({res:7})}{col 70} = {res}{ralign 6:256.49}
+{txt}{col 57}{lalign 13:Prob > chi2}{col 70} = {res}{ralign 6:0.0000}
+{txt}{col 1}{lalign 20:Log pseudolikelihood}{col 21} = {res}{ralign 10:-1994.8784}{txt}{col 57}{lalign 13:Pseudo R2}{col 70} = {res}{ralign 6:0.0677}
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26}    Robust
+{col 1}         ins{col 14}{c |} Coefficient{col 26}  std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}retire {c |}{col 14}{res}{space 2} .1969297{col 26}{space 2} .0849524{col 37}{space 1}    2.32{col 46}{space 3}0.020{col 54}{space 4} .0304261{col 67}{space 3} .3634332
+{txt}{space 9}age {c |}{col 14}{res}{space 2}-.0145955{col 26}{space 2} .0110189{col 37}{space 1}   -1.32{col 46}{space 3}0.185{col 54}{space 4}-.0361921{col 67}{space 3}  .007001
+{txt}{space 4}hstatusg {c |}{col 14}{res}{space 2} .3122654{col 26}{space 2} .0918378{col 37}{space 1}    3.40{col 46}{space 3}0.001{col 54}{space 4} .1322667{col 67}{space 3} .4922641
+{txt}{space 4}hhincome {c |}{col 14}{res}{space 2} .0023036{col 26}{space 2} .0011485{col 37}{space 1}    2.01{col 46}{space 3}0.045{col 54}{space 4} .0000526{col 67}{space 3} .0045546
+{txt}{space 4}educyear {c |}{col 14}{res}{space 2} .1142626{col 26}{space 2} .0143616{col 37}{space 1}    7.96{col 46}{space 3}0.000{col 54}{space 4} .0861143{col 67}{space 3} .1424108
+{txt}{space 5}married {c |}{col 14}{res}{space 2}  .578636{col 26}{space 2} .0941579{col 37}{space 1}    6.15{col 46}{space 3}0.000{col 54}{space 4}   .39409{col 67}{space 3} .7631821
+{txt}{space 8}hisp {c |}{col 14}{res}{space 2}-.8103059{col 26}{space 2} .1936793{col 37}{space 1}   -4.18{col 46}{space 3}0.000{col 54}{space 4} -1.18991{col 67}{space 3}-.4307016
+{txt}{space 7}_cons {c |}{col 14}{res}{space 2}-1.715578{col 26}{space 2} .7279873{col 37}{space 1}   -2.36{col 46}{space 3}0.018{col 54}{space 4}-3.142407{col 67}{space 3}-.2887495
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+
+{com}. margins, at(age=65 retire=1 hstatusg=1 hhincome=60 educyear=17 married=1 hisp=0)
+{res}
+{txt}{col 1}Adjusted predictions{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:3,206}
+{txt}{col 1}Model VCE: {res:Robust}
+
+{txt}{p2colset 1 13 13 2}{...}
+{p2col:Expression:}{res:Pr(ins), predict()}{p_end}
+{p2colreset}{...}
+{lalign 4:At: }{space 0}{lalign 8:retire} = {res:{ralign 2:1}}
+{lalign 4:}{space 0}{lalign 8:age} = {res:{ralign 2:65}}
+{lalign 4:}{space 0}{lalign 8:hstatusg} = {res:{ralign 2:1}}
+{lalign 4:}{space 0}{lalign 8:hhincome} = {res:{ralign 2:60}}
+{lalign 4:}{space 0}{lalign 8:educyear} = {res:{ralign 2:17}}
+{lalign 4:}{space 0}{lalign 8:married} = {res:{ralign 2:1}}
+{lalign 4:}{space 0}{lalign 8:hisp} = {res:{ralign 2:0}}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26} Delta-method
+{col 14}{c |}     Margin{col 26}   std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 7}_cons {c |}{col 14}{res}{space 2} .6234512{col 26}{space 2}  .019961{col 37}{space 1}   31.23{col 46}{space 3}0.000{col 54}{space 4} .5843284{col 67}{space 3}  .662574
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. 
+. // 95% de nuestras estimaciones puntuales para el individuo descrito estarán dentro del intervalo 0.58 y 0.66 de probabilidad de contar con seguro.
+. margins, dydx(age)
+{res}
+{txt}{col 1}Average marginal effects{col 58}{lalign 13:Number of obs}{col 71} = {res}{ralign 5:3,206}
+{txt}{col 1}Model VCE: {res:Robust}
+
+{txt}{p2colset 1 13 13 2}{...}
+{p2col:Expression:}{res:Pr(ins), predict()}{p_end}
+{p2col:dy/dx wrt:}{res:age}{p_end}
+{p2colreset}{...}
+
+{res}{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 14}{c |}{col 26} Delta-method
+{col 14}{c |}      dy/dx{col 26}   std. err.{col 38}      z{col 46}   P>|z|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 9}age {c |}{col 14}{res}{space 2}-.0031693{col 26}{space 2} .0023904{col 37}{space 1}   -1.33{col 46}{space 3}0.185{col 54}{space 4}-.0078543{col 67}{space 3} .0015158
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. 
+. // Notar que el comando prchange no es reconocido. El efecto marginal promedio de un año adicional de edad en la probabilidad de contar con seguro es de -0.3 puntos porcentuales.
+. 
+. 
+. //-- Close session -------------------------------------------------------------
+. 
+. log close
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\LENOVO\OneDrive - INSTITUTO TECNOLOGICO AUTONOMO DE MEXICO\ITAM\Econometría Aplicada I\resultados\taller-12.txt
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res}28 Oct 2023, 10:12:50
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}

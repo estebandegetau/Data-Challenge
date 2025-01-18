@@ -1,0 +1,772 @@
+---
+title: "Tarea 1"
+subtitle: "Taller de Econometría Aplicada I"
+author: "Esteban Degetau"
+date: "2023-09-12"
+format: pdf
+editor: visual
+execute:
+  echo: false
+  warning: false
+  cache: true
+  include: false
+lang: es
+---
+
+```{r Setup}
+
+rm(list = ls())
+gc()
+
+pacman::p_load(tidyverse,
+               knitr,
+               kableExtra,
+               conflicted,
+               DataExplorer,
+               fixest,
+               ggplot2,
+               MASS,
+               gtsummary)
+
+conflicts_prefer(dplyr::select())
+
+conflicts_prefer(dplyr::filter())
+
+
+
+
+```
+
+```{r Read}
+drinks <- "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-12-21/starbucks.csv" |>
+  read_csv()
+
+drinks <- drinks |>
+  mutate(
+    milk = case_when(milk == 0 ~ "none",
+                     milk == 1 ~ "nonfat",
+                     milk == 2 ~ "2 percent",
+                     milk == 3 ~ "soy",
+                     milk == 4 ~ "coconut",
+                     milk == 5 ~ "whole")
+  )
+
+```
+
+
+## 1. Análisis descriptivo
+
+a.  Usando el paquete `DataExplorer`, obtuvimos las estadísticas mostradas en la @tbl-dd, dodne se puede observar que los datos de bebidas de Starbucks tienen 15 variables para 1147 observaciones.
+
+b.  Estadística descriptiva en la @tbl-ss con media y desviación estándar entre paréntesis, así como mediana y rango intercuartílico entre corchetes.
+
+c.  Análisis gráfico. Histograma en la @fig-hist, Boxplot en la @fig-boxplot, y el diagrama de dipersión en la @fig-cor.
+
+d.  El efecto de agregar crema batida sobre las calorías se puede ver en la @fig-whip. En el panel (a) se puede ver la diferencia en medianas universal, mientras que en el panel (b) se puede ver la diferencia en promedios por tipo tamaño de bebida, estimado por OLS.
+
+e.  Cinco conclusiones. (i) En Starbucks se pueden pedir 1,147 bebidas distintas, sin incluir las bebidas por temporada (@tbl-dd). (ii) La bebida promedio de Starbucks tiene 228 calorías, 6.2 gramos de grasa y 35 gramos de azúcar (@tbl-ss). (iii) La bebida *venti* mediana tiene más cafeína, más calorías, más azúcar y más grasa que las bebdias medianas *grande* y *tall* (@fig-boxplot). (iv) Las bebidas con más calorías suelen tener más grasa, más colesterol y más azúcar, pero no necesariamente más cafeína (@fig-cor). (v) Incluir crema batida en una bebida *grande* aumenta la cantidad de calorías en promedio de 200 a 400 KCal (@fig-whip).
+
+## 2. Estimación puntual
+
+a.  Estimación con `MASS` de la distribución de las variables azúcar y cafeína. En la @fig-param-exp con parametrización exponencial y en la @fig-param-norm con normal. Notar que ninguna parametrización le hace justicia a la verdadera distribución de los datos.
+
+
+```{r MASS}
+# Exponential
+sug_exp <- fitdistr(drinks$sugar_g, 
+                      densfun = "exponential")
+
+caf_exp <- fitdistr(drinks$caffeine_mg, densfun = "exponential")
+
+# Normal
+
+sug_norm <- fitdistr(drinks$sugar_g, 
+                      densfun = "normal")
+
+caf_norm <- fitdistr(drinks$caffeine_mg, densfun = "normal")
+
+```
+
+
+b.  Tabla de resumen de estimadores. En la @tbl-exp-est se muestran los parámtros obtenidos de la distribución exponencial, y en la @tbl-norm-est de la distribución normal.
+
+
+```{r Tablas-parm}
+
+
+estim_exp <- tibble(
+  Parámetro = "Tasa",
+  Azúcar = sug_exp$estimate,
+  Cafeína = caf_exp$estimate
+)
+
+estim_norm <- tibble(
+  Parámetro = c("Media", "Desviación Estándar"),
+  Azúcar = sug_norm$estimate,
+  Cafeína = caf_norm$estimate
+)
+
+
+
+```
+
+
+c. La @fig-qqexp confirma que la distribución exponencial no se ajusta muy bien a los datos de azúcar ni de cafeína. De hecho, los datos se ajustan mejor a una distribución normal, salvo por los valores en la cola izquierda, como se puede ver en la @fig-qqnorm. El la @fig-param-exp se puede ver el histograma comparado con la distribución exponencial, y en la @fig-param-norm con la distribución normal.
+
+**Conclusión**: A pesar de que uno pensaría que una distribución exponencial se ajustaría mejor a los datos, por tener muchas observaciones en 0 (i.e. muchas bebidas sin cafeína o sin azúcar), la distribución normal se ajusta mejor a los datos al interior de la distribución (i.e. para valores mayores a 0) en cada caso.
+
+## 3. Estimación por intervalo
+
+a. Intervalo de 95% de confianza para la media de la variable de calorías (medidas en KCal). De acuerdo con la @tbl-ci, 95 por ciento de las estimaciones de la media estarán dentro de un intervalo [220.43, 236.36].
+
+
+
+b. Por tamaño de bebida, de acuerdo con la @tbl-ci-size, las bebidas *venti* tienen en promedio más calorías que cualquier otro tamaño, con 95% de confianza. Las bebidas *solo* y las bebidas *triple* tienen en promedio, una cantidad comparable de calorías. Notar que solo hay una bebida con tamaño *1 shot*, por lo que no hay una varianza que nos arroje una desviación estándar válida y no podemos calcular el error estándar (se) ni el intervalo de confianza.
+
+c. Representación gráfica de los intervalos de confianza por tamaño en la @fig-ci-size.
+
+d. Cocnlusión. Las bebidas con más calorías son las *venti*, que tienen en promedio 50 calorías más que las bebidas *grande* y 100 más que las *tall*. Hay unos tamaños con muy pocas calorías, como *triple*, *solo*, *quad* entre otras con menos de 50 calorías. 
+
+## 4. Pruebas de Hipótesis
+
+
+```{r plot-hip}
+
+by_milk_ht <- function(data, x, plot = T) {
+  
+  ht_table <- {{ data }} |>
+    group_by(milk) |>
+    summarize(
+      media = mean({{ x }}),
+      sd = sd({{ x }}),
+      n = n()
+  ) |>
+  mutate(
+    se = sd / sqrt(n),
+    t = media / se,
+    lower = media - 1.96 * se,
+    upper = media + 1.96 * se
+  ) 
+  
+  if (plot) {
+    
+    ht_table |>
+    ggplot(aes(milk, media)) +
+  geom_pointrange(aes(ymin = lower, ymax = upper)) 
+    
+  } else ht_table
+  
+}
+
+
+drinks |>
+  by_milk_ht(calories, plot = F)
+
+
+```
+
+
+a. A un nivel de  significancia de 5%, escribimos para $i$ y $j$ tipos de leche distintos. 
+
+$$
+H_0: \mu_i = \mu_j \quad vs \quad H_1: \mu_i \ne \mu_j
+$$
+En particular, podemos estar interesados en determinar si las bebidas con leche entera (*whole*) tienen en promedio una cantidad distinta de calorías, grasa y azúcar que las bebidas con leche *nonfat*. Adicionalmente, podríamos estar interesados en plantear la hipótesis alternativa de que las bebidas con leche ($i$) entera tienen en promedio más calorías, grasas y azúcar que las bebidas con leche nonfat ($j$). Entonces escribiríamos $H_1: \mu_i > \mu_j$. Sin embargo, esta hipótesis alternativa de un solo lado genera una región de rechazo más grande en el lado derecho de la distribución, para un mismo nivel de significancia. Entonces, en la prueba de un solo lado podríamos rechazar estimaciones que en la prueba de ambos lados no rechazaríamos. Para robustecer nuestras conclusiones, minimizando errores tipo 1, en esta sección nos limitaremos a pruebas de hipótesis bilaterales.
+
+b. En la @tbl-tstat se estima la prueba de hipótesis de diferencia de medias de calorías grasa y azúcar, entre leche entera y nonfat por OLS. Se presentan los estadísticos $t$ en paréntesis. Con un nivel de significancia de 5%, enocntramos que las bebidas con leche entera tienen más calorías y grasas que las bebidas con leche nonfat, pero no podemos rechazar la hipótesis nula de que tengan la misma cantidad de azúcares, puesto que enocntramos una $t=1.045<1.96$.
+
+c. En la @tbl-pval presentamos los valores-p de las pruebas de hipótesis. Consistente con los resultados de la @tbl-tstat, obtenemos valores p inferiores al 5% de nuestra significancia estadística para las medias de grasa y calorías, pero encontramos uno mayor a 5% para la prueba del azúcar.
+
+d. Interpretación. Las bebidas con leche entera tienen en promedio más calorías que las bebidas con leche nonfat. Las bebidas con leche entera tienen en promedio más grasa que las bebidas con leche nonfat. No encontramos evidencia de que las bebidas con leche entera tengan en promedio más azúcar que las bebidas con leche nonfat.
+
+e. Como vimos antes, el tamaño de la bebida y el uso de crema batida tienen un efecto en calorías. Rápidamente, en la @tbl-hpe se puede ver la significancia de estas variables en la determinación de calorías.
+
+
+```{r}
+#| include: false
+#| label: fig-ci-milk
+#| fig-cap: "Promedio de calorías, azúcar y grasas por tipo de leche con intervalos de 95% de confianza"
+#| layout-ncol: 2
+#| fig-subcap:
+#|    - "Calorías"
+#|    - "Azúcar"
+#|    - "Grasas"
+
+
+drinks |> by_milk_ht(calories) +
+  labs(y = "calorías (KCal)")
+
+drinks |> by_milk_ht(sugar_g) +
+  labs(y = "azúcar (g)")
+
+drinks |> by_milk_ht(total_fat_g) +
+  labs(y = "grasas (g)")
+
+```
+
+
+
+## 5. Estimación por remuestreo
+
+
+```{r}
+
+caf_cal_cor <- cor(drinks$caffeine_mg, drinks$calories) |> round(3)
+
+```
+
+
+a. El coeficiente de correlación entre cafeína y calorías dentro de las bebidas de Starbucks es `r caf_cal_cor`. En la @fig-caf-cal se puede ver la relación negativa entre las variables.
+
+
+```{r}
+
+set.seed(20230910)
+
+cor_bootstrap <- function(id, sample_size = 1) {
+  
+  
+  sample <- drinks |>
+    sample_frac(size = sample_size, replace = T) 
+  
+  caff <- sample |> pull(caffeine_mg)
+  cals <- sample |> pull(calories)
+  
+  cor(caff, cals)
+    
+  
+}
+
+bootstrap_100 <- tibble(id = 1:1000) |>
+  mutate(cor_res = map(id, cor_bootstrap),
+         subsample = "100%")
+
+bootstrap_50 <- tibble(id = 1:1000) |>
+  mutate(cor_res = map(id, cor_bootstrap, sample_size = 0.5),
+         subsample = "50%")
+
+bootstrap <- full_join(bootstrap_50, bootstrap_100)
+
+
+
+```
+
+
+b. En la @tbl-bssd se puede ver la varianza del coeficiente de correlación entre cafeína y calorías, estimada con el 100% y el 50% de la muestra (con reemplazo) y 1,000 repeticiones en Bootstrap. Se puede ver que la varianza bajo las submuestras de 50% es mayor.
+
+c. En la @fig-bshist se puede ver la densidad de las correlaciones entre cafeína y calorías por tamaño de la submuestra por Bootstrap. Se puede apreciar que el ejercicio con 50% de la muestra tiene mayor varianza.
+
+
+```{r jackknife}
+
+drinks_ids <- drinks |> mutate(drink_id = row_number())
+
+jackknife <- function(jk_id) {
+  
+  work <-  drinks_ids |>
+    dplyr::filter(drink_id != jk_id) 
+  
+  caff <- work |> pull(caffeine_mg)
+  cal <- work |> pull(calories)
+  
+  cor(caff, cal) |> as.numeric()
+  
+  
+}
+
+jackknife_work <- tibble(id = seq(1, nrow(drinks))) |>
+  mutate(cor_res = map(id, jackknife))
+  
+jk_var <- jackknife_work |>
+  summarize(var = var(cor_res |> as.numeric() )) |>
+  pull(var) |>
+  round(6)
+
+
+```
+
+
+d. La varianza de la correlación entre cafeína y calorías utilizando Jackknife fue de `r jk_var`, tres órdenes de magnitud inferior que ambas estimaciones por Bootstrap. En la @fig-jkdens se puede apreciar la distribución de las etimaciones de la correlación entre cafeína y calorías por Jackknife. Notar que las densidad al rededor de la moda es mucho mayor que en Bootstrap.
+
+
+e. Utilizando la varianza obtenida por Bootstrap con el totalidad de la muestra, sobre el coeficiente de correlacion entre cafeína y calorías $\rho$, evaluamos la hipótesis:
+
+$$H_0: \rho = 0 \quad vs \quad H_1:\rho\ne 0$$
+
+
+
+
+```{r}
+
+test <-  bootstrap_100 |>
+  summarise(sd = sd(as.numeric(cor_res)),
+            mean = mean(as.numeric(cor_res)),
+            n = n()) |>
+  mutate(t = mean / (sd / sqrt(n)))
+
+bootstrap_100 |>
+  ggplot(aes(cor_res |> as.numeric())) +
+  stat_ecdf() +
+  geom_vline(xintercept = 0)
+
+bs_test <- bootstrap_100 |>
+  mutate(cor_res = as.numeric(cor_res),
+         z = cor_res - mean(cor_res) / (sd(cor_res) / sqrt(n()))) 
+
+bs_test |>
+  ggplot(aes(z)) +
+  geom_density() 
+
+
+  quantile(bs_test$z, c(0.9, 0.95, 0.99))
+  
+  test$t
+
+```
+
+
+
+Obtenemos un estadístico $t=$ `r test$t`, que indica que podemos rechazar la hiótesis nula de que el coeficiente de correlación entre cafeína y calorías sea cero, incluso con un nivel de significancia del 1%, al evaluar respecto de la distribución empírica de los estimadores obtenida por Bootstrap con la totalidad de la muestra. La @tbl-bstest muestra los valores de $|t|$ a partir de los cuales podemos rechazar $H_0$.
+
+
+
+{{< pagebreak >}}
+
+
+
+# Tablas
+
+
+```{r}
+#| include: TRUE
+#| label: tbl-dd
+#| tbl-cap: "Descripción de los datos, bebidas de Starbucks"
+#| results: hold
+
+DataExplorer::introduce(drinks) |>
+  pivot_longer(everything(), 
+               names_to = "Estadístico",
+               values_to = "Valor") |>
+  kable(booktabs = T) |>
+  kableExtra::kable_styling(full_width = F)
+
+# plot_intro(drinks)
+# 
+# plot_missing(drinks)
+# 
+# plot_bar(drinks)
+# 
+# plot_histogram(drinks)
+# 
+# plot_correlation(drinks)
+```
+
+```{r}
+#| include: TRUE
+#| label: tbl-ss
+#| tbl-cap: "Bebidas de Starbucks. Estadística descriptiva"
+
+pacman::p_load(gtsummary)
+
+theme_gtsummary_language(language = "es") 
+
+drinks |>
+  dplyr::select(serv_size_m_l,
+         calories,
+         total_fat_g,
+         cholesterol_mg,
+         sugar_g,
+         caffeine_mg) |>
+  tbl_summary(
+    type = everything() ~ "continuous2",
+    statistic = all_continuous() ~ c("{mean} ({sd})", "{median} [{p25}, {p75}]")
+  ) |>
+  as_kable_extra(booktabs = T) 
+  
+```
+
+```{r}
+#| include: true
+#| label: tbl-exp-est
+#| tbl-cap: "Estimación de parámetros con distribución exponencial"
+
+estim_exp |>
+  kable(booktabs = T, digits = 3)
+
+```
+
+```{r}
+#| include: true
+#| label: tbl-norm-est
+#| tbl-cap: "Estimación de parámtros con distribución normal"
+
+estim_norm |> kable(booktabs = T,
+                    digits = 3)
+
+```
+
+```{r}
+#| include: true
+#| label: tbl-ci
+#| tbl-cap: "Intervalo de 95% de confianza para la media de calorías de las bebidas de Starbucks"
+
+drinks |>
+  summarize(
+    media = mean(calories),
+    sd = sd(calories),
+    n = n()
+  ) |>
+  mutate(
+    se = sd / sqrt(n),
+    lower = media - qnorm(0.975) * se,
+    upper = media + qnorm(0.975) * se
+  ) |>
+  kable(digits = 2, booktabs = T)
+
+```
+
+```{r}
+#| include: true
+#| label: tbl-ci-size
+#| tbl-cap: "Intervalo de 95% de confianza para la media de las calorías de bebidas de Starbucks por tamaño"
+
+drinks |>
+  group_by(size) |>
+  summarize(
+    media = mean(calories),
+    sd = sd(calories),
+    n = n()
+  ) |>
+  mutate(
+    se = sd / sqrt(n),
+    lower = media - 1.96 * se,
+    upper = media + 1.96 * se
+  ) |>
+  kable(digits = 2, booktabs = T)
+
+```
+
+```{r}
+#| include: true
+#| label: tbl-tstat
+#| tbl-cap: "Diferencia de medias entre bebidas con leche entera y nonfat (categoría omitida), apara calorías, grasas y azúcares"
+#| results: asis
+
+
+
+
+drinks |>
+  dplyr::filter(milk %in% c("whole", "nonfat")) |>
+  fixest::feols(sw(calories, sugar_g, total_fat_g) ~ milk) |> 
+  etable(coefstat = "tstat",
+         tex = T,
+         fitstat = ~ n + my + f
+         # notes = "Solo se incluyen en la muestra bebidas con leche entera y leche nonfat, de manera que la categoría comitida es nonfat, cuya media se muestra como constante. El estimador para leche entera *milkwhole* representa la diferencia de medias entre bebidas con leche nonfat y leche entera."
+         )
+
+
+
+```
+
+```{r}
+#| include: true
+#| label: tbl-pval
+#| tbl-cap: "Diferencia de medias entre bebidas con leche entera y nonfat, con valores p"
+
+drinks |> dplyr::filter(milk %in% c("whole", "nonfat")) |>
+  gtsummary::tbl_summary(
+    by = "milk", 
+    include = c(calories, sugar_g, total_fat_g),
+    statistic = everything() ~ "{mean} ({sd})"
+  ) |>
+  add_difference() |>
+  modify_column_hide(ci) |>
+  as_kable_extra(booktabs = T)
+  
+
+```
+
+```{r}
+#| include: true
+#| label: tbl-hpe
+#| tbl-cap: "Diferencia de medias de calorías para tamaño y uso de crema batida, solo para bebidas tamaños *tall*, *grande* y *venti*"
+#| results: asis
+
+drinks |>
+  dplyr::filter(size %in% c("tall", "grande", "venti")) |>
+  feols(calories ~ sw(size, whip)) |>
+  etable(tex = T, fitstat = ~ n + my + f)
+
+```
+
+```{r}
+#| include: true
+#| label: tbl-bssd
+#| tbl-cap: "Varianza de la correlación entre cafeína y calorías, estimada con diferentes tamaños de submuestra en Bootstrap"
+
+bootstrap |>
+  group_by(subsample) |>
+  summarise(var = var(cor_res |> as.numeric())) |>
+  kable(booktabs = T, digits = 4)
+```
+
+```{r}
+#| include: true
+#| label: tbl-bstest
+#| tbl-cap: "Cuantiles de la distribución de coeficientes de correlación entre cafeína y calorías con Bootstrap y la totalidad de la muestra. Indican el nivel a partir del cual rechazar la hipótesis nula del inciso 5.e"
+
+quantile(bs_test$z, c(0.9, 0.95, 0.99)) |> t() |>
+  kable(booktabs = T) 
+
+```
+
+{{< pagebreak >}}
+
+
+
+# Figuras
+
+
+```{r}
+#| include: true
+#| label: fig-hist
+#| fig-cap: "Histogramas"
+
+analizar <- drinks |>
+  select(serv_size_m_l,
+         calories,
+         total_fat_g,
+         cholesterol_mg,
+         sugar_g,
+         caffeine_mg)
+
+plot_histogram(analizar)
+
+
+
+```
+
+```{r}
+#| include: true
+#| label: fig-boxplot
+#| fig-cap: "Boxplot por tamaño de bebida"
+
+
+drinks |> 
+  select(serv_size_m_l,
+         calories,
+         total_fat_g,
+         cholesterol_mg,
+         sugar_g,
+         caffeine_mg,
+         size) %>%
+  dplyr::filter(size %in% c("venti", "grande", "tall")) |>
+  plot_boxplot(by = "size")
+
+pacman::p_load(gclus)
+
+
+
+```
+
+```{r}
+#| include: true
+#| label: fig-cor
+#| fig-cap: "Diagrama de dispersión"
+#| fig-width: 7
+#| fig-height: 7
+
+drinks |> 
+  select(serv_size_m_l,
+         calories,
+         total_fat_g,
+         cholesterol_mg,
+         sugar_g,
+         caffeine_mg) |>
+  cpairs()
+```
+
+```{r}
+#| include: true
+#| layout-ncol: 2
+#| label: fig-whip
+#| fig-cap: "Crema batida y calorías"
+#| fig-subcap: 
+#|    - "Diferencia en medianas"
+#|    - "Diferencia en medias"
+
+drinks |>
+  ggplot(aes(as_factor(whip), calories)) +
+  geom_boxplot() +
+  scale_y_continuous(limits = c(0, 600))
+
+drinks |> 
+  dplyr::filter(size %in% c("venti", "grande", "tall")) |>
+  ggplot(aes(whip, calories, color = size)) +
+  geom_smooth(method = "lm") +
+  scale_y_continuous(limits = c(0, 600))
+```
+
+```{r}
+#| include: true
+#| label: fig-param-exp
+#| fig-cap: "Parametrización con distribución exponencial"
+#| fig-subcap: 
+#|    - "Azúcar"
+#|    - "Cafeína"
+#| layout-ncol: 2
+
+pacman::p_load(MASS)
+
+
+sugar_hist <- drinks |>
+  ggplot(aes(sugar_g)) +
+  geom_histogram(aes(y = after_stat(count)/sum(after_stat(count)))) +
+  labs(y = "density")
+
+caffeine_hist <- drinks |>
+  ggplot(aes(caffeine_mg)) +
+  geom_histogram(aes(y = after_stat(count)/sum(after_stat(count)))) +
+  labs(y = "density")
+
+
+
+
+sugar_hist +
+  stat_function(fun = dexp, 
+                args = list(rate = sug_exp$estimate))
+
+caffeine_hist +
+  stat_function(fun = dexp, 
+                args = list(rate = sug_exp$estimate))
+
+
+
+```
+
+```{r}
+#| include: true
+#| label: fig-qqexp
+#| fig-cap: "Cuantil-cuantil exponencial"
+#| layout-ncol: 2
+#| fig-subcap: 
+#|    - "Azúcar"
+#|    - "Cafeína"
+
+
+drinks |>
+  ggplot(aes(sample = sugar_g)) +
+  stat_qq(distribution = stats::qexp) +
+  stat_qq_line()
+
+drinks |>
+  ggplot(aes(sample = caffeine_mg)) +
+  stat_qq(distribution = stats::qexp) +
+  stat_qq_line()
+
+
+```
+
+```{r}
+#| include: true
+#| label: fig-param-norm
+#| fig-cap: Parametrización con distribución Normal
+#| layout-ncol: 2
+#| fig-subcap: 
+#|    - "Azúcar"
+#|    - "Cafeína"
+
+
+
+sugar_hist +
+  stat_function(fun = dnorm, args = list(mean = sug_norm$estimate[1],
+                            sd = sug_norm$estimate[2])) 
+caffeine_hist +
+  stat_function(fun = dnorm, args = list(mean = caf_norm$estimate[1],
+                            sd = caf_norm$estimate[2])) 
+```
+
+```{r}
+#| include: true
+#| label: fig-qqnorm
+#| fig-cap: "Cuantil-cuantil normal"
+#| layout-ncol: 2
+#| fig-subcap: 
+#|    - "Azúcar"
+#|    - "Cafeína"
+
+
+drinks |>
+  ggplot(aes(sample = sugar_g)) +
+  stat_qq(distribution = stats::qnorm) +
+  stat_qq_line()
+
+drinks |>
+  ggplot(aes(sample = caffeine_mg)) +
+  stat_qq(distribution = stats::qnorm) +
+  stat_qq_line()
+
+
+```
+
+```{r}
+#| include: true
+#| label: fig-ci-size
+#| fig-cap: "Calorías promedio por tamaño de bebida e intervalos de 95% de confianza"
+
+drinks |>
+  group_by(size) |>
+  summarize(
+    media = mean(calories),
+    sd = sd(calories),
+    n = n()
+  ) |>
+  mutate(
+    se = sd / sqrt(n),
+    lower = media - 1.96 * se,
+    upper = media + 1.96 * se
+  ) |>
+  ungroup() |>
+  ggplot(aes(size, media)) +
+  geom_pointrange(aes(ymin = lower, ymax = upper)) +
+  labs(y = "calorías")
+
+```
+
+```{r}
+#| include: true
+#| label: fig-caf-cal
+#| fig-cap: "Dispersión entre cafeína y calorías, estimación lineal por OLS e intarvalo de confianza de 95%"
+
+drinks |>
+  ggplot(aes(caffeine_mg, calories)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+
+
+```
+
+```{r}
+#| include: true
+#| label: fig-bshist
+#| fig-cap: "Densidad de las correlaciones entre cafeína y calorías por tamaño de la submuestra por Bootstrap"
+
+bootstrap |>
+  ggplot(aes(as.numeric(cor_res), fill = subsample)) +
+  geom_density(alpha = 0.5) +
+  labs(x = "cor(caffeine_mg, calories)")
+
+```
+
+```{r}
+#| include: true
+#| label: fig-jkdens
+#| fig-cap: "Densidad de estimaciones de la correlación entre cafeína y calorías por Jackknife"
+
+jackknife_work |>
+  ggplot(aes(as.numeric(cor_res))) +
+  geom_density() +
+  labs(x = "cor(caffeine_mg, calories)")
+
+```

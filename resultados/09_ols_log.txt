@@ -1,0 +1,153 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\LENOVO\OneDrive - INSTITUTO TECNOLOGICO AUTONOMO DE MEXICO\ITAM\Taller Econometría Aplicada I\resultados\09_ols_log.txt
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res}12 Oct 2023, 07:41:04
+{txt}
+{com}. 
+. clear all
+{res}{txt}
+{com}. 
+. use "C:\Users\LENOVO\OneDrive - INSTITUTO TECNOLOGICO AUTONOMO DE MEXICO\ITAM\Taller Econometría Aplicada I\datos\gss.dta"
+{txt}
+{com}. 
+. tab agedec
+
+    {txt}Age (as {c |}
+ decade) of {c |}
+ respondent {c |}      Freq.     Percent        Cum.
+{hline 12}{c +}{hline 35}
+      18-19 {c |}{res}        951        1.73        1.73
+{txt}        20s {c |}{res}     10,849       19.76       21.50
+{txt}        30s {c |}{res}     11,875       21.63       43.13
+{txt}        40s {c |}{res}     10,082       18.37       61.50
+{txt}        50s {c |}{res}      8,123       14.80       76.30
+{txt}        60s {c |}{res}      6,539       11.91       88.21
+{txt}        70s {c |}{res}      4,502        8.20       96.41
+{txt}        80s {c |}{res}      1,969        3.59      100.00
+{txt}{hline 12}{c +}{hline 35}
+      Total {c |}{res}     54,890      100.00
+{txt}
+{com}. reg health i.agedec
+
+{txt}      Source {c |}       SS           df       MS      Number of obs   ={res}    40,984
+{txt}{hline 13}{c +}{hline 34}   F(7, 40976)     = {res}   451.59
+{txt}       Model {c |} {res} 2111.10121         7  301.585887   {txt}Prob > F        ={res}    0.0000
+{txt}    Residual {c |} {res} 27364.9308    40,976  .667828261   {txt}R-squared       ={res}    0.0716
+{txt}{hline 13}{c +}{hline 34}   Adj R-squared   ={res}    0.0715
+{txt}       Total {c |} {res}  29476.032    40,983  .719225826   {txt}Root MSE        =   {res} .81721
+
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{col 1}      health{col 14}{c |} Coefficient{col 26}  Std. err.{col 38}      t{col 46}   P>|t|{col 54}     [95% con{col 67}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{space 6}agedec {c |}
+{space 8}20s  {c |}{col 14}{res}{space 2}  .011795{col 26}{space 2} .0315301{col 37}{space 1}    0.37{col 46}{space 3}0.708{col 54}{space 4}-.0500046{col 67}{space 3} .0735947
+{txt}{space 8}30s  {c |}{col 14}{res}{space 2} -.030694{col 26}{space 2} .0314385{col 37}{space 1}   -0.98{col 46}{space 3}0.329{col 54}{space 4}-.0923141{col 67}{space 3} .0309261
+{txt}{space 8}40s  {c |}{col 14}{res}{space 2}-.1577926{col 26}{space 2} .0316406{col 37}{space 1}   -4.99{col 46}{space 3}0.000{col 54}{space 4}-.2198089{col 67}{space 3}-.0957763
+{txt}{space 8}50s  {c |}{col 14}{res}{space 2}-.3258159{col 26}{space 2} .0319608{col 37}{space 1}  -10.19{col 46}{space 3}0.000{col 54}{space 4}-.3884597{col 67}{space 3} -.263172
+{txt}{space 8}60s  {c |}{col 14}{res}{space 2}-.4946236{col 26}{space 2} .0323881{col 37}{space 1}  -15.27{col 46}{space 3}0.000{col 54}{space 4}-.5581049{col 67}{space 3}-.4311422
+{txt}{space 8}70s  {c |}{col 14}{res}{space 2}-.6242973{col 26}{space 2} .0333563{col 37}{space 1}  -18.72{col 46}{space 3}0.000{col 54}{space 4}-.6896763{col 67}{space 3}-.5589182
+{txt}{space 8}80s  {c |}{col 14}{res}{space 2}-.6843224{col 26}{space 2} .0370656{col 37}{space 1}  -18.46{col 46}{space 3}0.000{col 54}{space 4}-.7569718{col 67}{space 3} -.611673
+{txt}{space 12} {c |}
+{space 7}_cons {c |}{col 14}{res}{space 2} 3.222678{col 26}{space 2} .0302049{col 37}{space 1}  106.69{col 46}{space 3}0.000{col 54}{space 4} 3.163475{col 67}{space 3}  3.28188
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 9}{hline 8}{hline 13}{hline 12}
+{res}{txt}
+{com}. 
+. testparm i.agedec
+
+{p 0 7}{space 1}{text:( 1)}{space 1} {res}2.agedec = 0{p_end}
+{p 0 7}{space 1}{text:( 2)}{space 1} 3.agedec = 0{p_end}
+{p 0 7}{space 1}{text:( 3)}{space 1} 4.agedec = 0{p_end}
+{p 0 7}{space 1}{text:( 4)}{space 1} 5.agedec = 0{p_end}
+{p 0 7}{space 1}{text:( 5)}{space 1} 6.agedec = 0{p_end}
+{p 0 7}{space 1}{text:( 6)}{space 1} 7.agedec = 0{p_end}
+{p 0 7}{space 1}{text:( 7)}{space 1} 8.agedec = 0{p_end}
+
+{txt}       F(  7, 40976) ={res}  451.59
+{txt}{col 13}Prob > F ={res}    0.0000
+{txt}
+{com}. contrast p.agedec
+{res}
+{txt}Contrasts of marginal linear predictions
+
+{txt}{p2colset 1 10 10 2}{...}
+{p2col:Margins:}{res:asbalanced}{p_end}
+{p2colreset}{...}
+
+{res}{col 1}{text}{hline 13}{c TT}{hline 11}{hline 12}{hline 11}
+{col 14}{text}{c |}         df{col 26}           F{col 38}        P>F
+{res}{col 1}{text}{hline 13}{c +}{hline 11}{hline 12}{hline 11}
+{space 6}agedec {c |}
+   (linear)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}  1187.58{col 38}{space 2}   0.0000
+{txt}(quadratic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}    26.65{col 38}{space 2}   0.0000
+{txt}    (cubic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}    52.99{col 38}{space 2}   0.0000
+{txt}  (quartic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}     1.18{col 38}{space 2}   0.2778
+{txt}  (quintic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}     1.00{col 38}{space 2}   0.3179
+{txt}   (sextic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}     0.15{col 38}{space 2}   0.6959
+{txt}   (septic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}     0.02{col 38}{space 2}   0.8748
+{col 1}{text}      Joint {col 14}{c |}{result}{space 2}        7{col 26}{space 3}   451.59{col 38}{space 2}   0.0000
+{col 14}{text}{c |}
+{res}{col 1}{text} Denominator{col 14}{c |}{result}{space 2}    40976
+{col 1}{text}{hline 13}{c BT}{hline 11}{hline 12}{hline 11}
+{res}
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 14}{hline 12}
+{col 14}{c |}   Contrast{col 26}   Std. err.{col 38}     [95% con{col 51}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 14}{hline 12}
+{space 6}agedec {c |}
+   (linear)  {c |}{col 14}{res}{space 2}-.2599665{col 26}{space 2} .0075437{col 37}{space 5}-.2747524{col 51}{space 3}-.2451806
+{txt}(quadratic)  {c |}{col 14}{res}{space 2}-.0384272{col 26}{space 2} .0074435{col 37}{space 5}-.0530165{col 51}{space 3}-.0238378
+{txt}    (cubic)  {c |}{col 14}{res}{space 2} .0466045{col 26}{space 2} .0064025{col 37}{space 5} .0340554{col 51}{space 3} .0591536
+{txt}  (quartic)  {c |}{col 14}{res}{space 2} .0056375{col 26}{space 2}  .005194{col 37}{space 5}-.0045429{col 51}{space 3} .0158178
+{txt}  (quintic)  {c |}{col 14}{res}{space 2}-.0042917{col 26}{space 2} .0042968{col 37}{space 5}-.0127134{col 51}{space 3}   .00413
+{txt}   (sextic)  {c |}{col 14}{res}{space 2} .0014878{col 26}{space 2} .0038067{col 37}{space 5}-.0059734{col 51}{space 3} .0089489
+{txt}   (septic)  {c |}{col 14}{res}{space 2}-.0005636{col 26}{space 2}  .003578{col 37}{space 5}-.0075765{col 51}{space 3} .0064494
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 14}{hline 12}
+
+{com}. contrast p(2/7).agedec
+{res}
+{txt}Contrasts of marginal linear predictions
+
+{txt}{p2colset 1 10 10 2}{...}
+{p2col:Margins:}{res:asbalanced}{p_end}
+{p2colreset}{...}
+
+{res}{col 1}{text}{hline 13}{c TT}{hline 11}{hline 12}{hline 11}
+{col 14}{text}{c |}         df{col 26}           F{col 38}        P>F
+{res}{col 1}{text}{hline 13}{c +}{hline 11}{hline 12}{hline 11}
+{space 6}agedec {c |}
+(quadratic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}    26.65{col 38}{space 2}   0.0000
+{txt}    (cubic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}    52.99{col 38}{space 2}   0.0000
+{txt}  (quartic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}     1.18{col 38}{space 2}   0.2778
+{txt}  (quintic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}     1.00{col 38}{space 2}   0.3179
+{txt}   (sextic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}     0.15{col 38}{space 2}   0.6959
+{txt}   (septic)  {res}{col 14}{text}{c |}{result}{space 2}        1{col 26}{space 3}     0.02{col 38}{space 2}   0.8748
+{col 1}{text}      Joint {col 14}{c |}{result}{space 2}        6{col 26}{space 3}    20.61{col 38}{space 2}   0.0000
+{col 14}{text}{c |}
+{res}{col 1}{text} Denominator{col 14}{c |}{result}{space 2}    40976
+{col 1}{text}{hline 13}{c BT}{hline 11}{hline 12}{hline 11}
+{res}
+{txt}{hline 13}{c TT}{hline 11}{hline 11}{hline 14}{hline 12}
+{col 14}{c |}   Contrast{col 26}   Std. err.{col 38}     [95% con{col 51}f. interval]
+{hline 13}{c +}{hline 11}{hline 11}{hline 14}{hline 12}
+{space 6}agedec {c |}
+(quadratic)  {c |}{col 14}{res}{space 2}-.0384272{col 26}{space 2} .0074435{col 37}{space 5}-.0530165{col 51}{space 3}-.0238378
+{txt}    (cubic)  {c |}{col 14}{res}{space 2} .0466045{col 26}{space 2} .0064025{col 37}{space 5} .0340554{col 51}{space 3} .0591536
+{txt}  (quartic)  {c |}{col 14}{res}{space 2} .0056375{col 26}{space 2}  .005194{col 37}{space 5}-.0045429{col 51}{space 3} .0158178
+{txt}  (quintic)  {c |}{col 14}{res}{space 2}-.0042917{col 26}{space 2} .0042968{col 37}{space 5}-.0127134{col 51}{space 3}   .00413
+{txt}   (sextic)  {c |}{col 14}{res}{space 2} .0014878{col 26}{space 2} .0038067{col 37}{space 5}-.0059734{col 51}{space 3} .0089489
+{txt}   (septic)  {c |}{col 14}{res}{space 2}-.0005636{col 26}{space 2}  .003578{col 37}{space 5}-.0075765{col 51}{space 3} .0064494
+{txt}{hline 13}{c BT}{hline 11}{hline 11}{hline 14}{hline 12}
+
+{com}. 
+. 
+. 
+. *---- Close -------------------------------------------------------------------
+. log close
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\LENOVO\OneDrive - INSTITUTO TECNOLOGICO AUTONOMO DE MEXICO\ITAM\Taller Econometría Aplicada I\resultados\09_ols_log.txt
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res}12 Oct 2023, 07:41:05
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}
